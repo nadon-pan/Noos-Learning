@@ -12,15 +12,15 @@ export default function AuthPage() {
     console.log('[Auth] Initiating Google OAuth...');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/home` },
+      options: { redirectTo: `${window.location.origin}/lobby` },
     });
     console.log('[Auth] Google OAuth response:', { data, error });
     if (error) setMessage(error.message);
   };
 
   const handleGuest = () => {
-    console.log('[Auth] Continuing as guest — redirecting to /home');
-    router.push('/home');
+    console.log('[Auth] Continuing as guest — redirecting to /lobby');
+    router.push('/lobby');
   };
 
   return (
