@@ -6,38 +6,7 @@ import supabase from '@/lib/supabase';
 
 export default function AuthPage() {
   const router = useRouter();
-  const [isSignUp, setIsSignUp] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-
-  const handleEmailAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
-
-    console.log(`[Auth] ${isSignUp ? 'Sign Up' : 'Sign In'} attempt with email:`, email);
-
-    let result;
-    if (isSignUp) {
-      result = await supabase.auth.signUp({ email, password });
-    } else {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    }
-
-    const { data, error } = result;
-    console.log('[Auth] Supabase response:', { data, error });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      console.log('[Auth] Success — redirecting to /home');
-      router.push('/home');
-    }
-
-    setLoading(false);
-  };
 
   const handleGoogleLogin = async () => {
     console.log('[Auth] Initiating Google OAuth...');
@@ -65,61 +34,6 @@ export default function AuthPage() {
 
         {/* Card */}
         <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm">
-          {/* Sign Up / Sign In toggle */}
-          <div className="flex rounded-xl bg-orange-50 p-1 mb-6">
-            <button
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-                isSignUp ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'
-              }`}
-              onClick={() => { setIsSignUp(true); setMessage(''); }}
-            >
-              Sign Up
-            </button>
-            <button
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-                !isSignUp ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'
-              }`}
-              onClick={() => { setIsSignUp(false); setMessage(''); }}
-            >
-              Sign In
-            </button>
-          </div>
-
-          {/* Email / Password form */}
-          <form onSubmit={handleEmailAuth} className="space-y-3">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-orange-200 bg-orange-50 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-orange-200 bg-orange-50 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-            />
-            {message && <p className="text-xs text-red-500">{message}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium rounded-xl text-sm transition-colors"
-            >
-              {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-orange-100" />
-            <span className="text-xs text-stone-400">or</span>
-            <div className="flex-1 h-px bg-orange-100" />
-          </div>
-
           {/* Google login */}
           <button
             onClick={handleGoogleLogin}
@@ -133,6 +47,8 @@ export default function AuthPage() {
             </svg>
             Continue with Google
           </button>
+
+          {message && <p className="mt-3 text-xs text-red-500 text-center">{message}</p>}
 
           {/* Guest */}
           <button
