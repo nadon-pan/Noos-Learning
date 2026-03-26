@@ -1,156 +1,284 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import supabase from '@/lib/supabase';
 
-const FEATURES = [
+const OPPONENTS = [
   {
-    icon: '🟩',
-    title: 'Classic Wordle',
-    desc: 'Guess a 5-letter word in 6 tries. Familiar rules, fresh challenge every day.',
+    id: 'slacker',
+    name: 'The Slacker',
+    difficulty: 'Easy',
+    difficultyColor: '#22C55E',
+    description: 'Chill and laid-back. Will basically tell you the answer if you ask nicely.',
+    emoji: '😎',
+    stats: { helpfulness: 'Very High', evasion: 'Low' },
   },
   {
-    icon: '🤖',
-    title: 'AI Chatbot Hints',
-    desc: 'Stuck on a word? Ask the AI assistant for a nudge — without spoiling the answer.',
+    id: 'professor',
+    name: 'The Professor',
+    difficulty: 'Medium',
+    difficultyColor: '#157FEC',
+    description: 'Scholarly and methodical. Gives fair clues but makes you work for them.',
+    emoji: '🎓',
+    stats: { helpfulness: 'Medium', evasion: 'Medium' },
   },
   {
-    icon: '🏆',
-    title: 'Leaderboard',
-    desc: 'Compete with friends and see who solves the puzzle the fastest. Coming soon.',
+    id: 'riddler',
+    name: 'The Riddler',
+    difficulty: 'Hard',
+    difficultyColor: '#EF4444',
+    description: 'Cryptic and evasive. Every answer raises more questions.',
+    emoji: '🎭',
+    stats: { helpfulness: 'Low', evasion: 'Very High' },
   },
 ];
 
-const STEPS = [
-  {
-    step: '1',
-    title: 'Guess the Word',
-    desc: 'Type any valid 5-letter word and press Enter. You have 6 attempts.',
-  },
-  {
-    step: '2',
-    title: 'Read the Colour Clues',
-    desc: 'Green = correct letter, correct spot. Yellow = correct letter, wrong spot. Grey = not in the word.',
-  },
-  {
-    step: '3',
-    title: 'Ask the AI for Help',
-    desc: 'Open the chatbot panel and ask for a hint based on your guesses so far.',
-  },
+const DOMAIN_SUGGESTIONS = [
+  'Historical Figures',
+  'Quantum Physics',
+  'Classic Literature',
+  'Global Economics',
 ];
 
-// Preview tile grid shown in the hero section
-const PREVIEW_ROWS = [
-  { letters: ['W', 'O', 'R', 'D', 'S'], colors: ['green', 'grey', 'yellow', 'grey', 'grey'] },
-  { letters: ['G', 'U', 'E', 'S', 'S'], colors: ['grey', 'grey', 'grey', 'grey', 'grey'] },
-  { letters: ['', '', '', '', ''],       colors: ['empty', 'empty', 'empty', 'empty', 'empty'] },
-];
+// TODO: Replace with real API call → POST /api/domain-generator with body { domain }
+async function getDomainTerm(domain) {
+  return `${domain} Concept`; // placeholder until Thad's endpoint is ready
+}
 
-const TILE_COLOR = {
-  green:  'bg-green-400 border-green-400 text-white',
-  yellow: 'bg-amber-400 border-amber-400 text-white',
-  grey:   'bg-stone-300 border-stone-300 text-white',
-  empty:  'bg-white border-orange-200 text-stone-800',
-};
-
-export default function HomePage() {
+export default function LobbyPage() {
   const router = useRouter();
 
-  const scrollToHow = () => {
-    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const [authLoading, setAuthLoading] = useState(true);
+  const [playerName, setPlayerName] = useState('Guest');
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [domain, setDomain] = useState('');
+  const [selectedOpponent, setSelectedOpponent] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState(null);
+
+  useEffect(() => {
+    async function init() {
+      // Allow guest access without a Supabase session
+      const isGuest = localStorage.getItem('guestMode') === 'true';
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session && !isGuest) {
+        router.push('/login');
+        return;
+      }
+
+      if (session) {
+        const user = session.user;
+        setPlayerName(user.user_metadata?.full_name || user.user_metadata?.name || 'Guest');
+        const { data } = await supabase
+          .from('scores')
+          .select('score')
+          .eq('user_id', user.id);
+        if (data) {
+          setTotalPoints(data.reduce((sum, r) => sum + (r.score ?? 0), 0));
+        }
+      }
+      // guest: playerName stays 'Guest', totalPoints stays 0
+
+      setAuthLoading(false);
+    }
+    init();
+  }, []);
+
+  async function handleStartGame() {
+    if (!domain.trim()) {
+      setStartError('Please enter a domain before starting.');
+      return;
+    }
+    setIsStarting(true);
+    setStartError(null);
+    try {
+      const finalTerm = await getDomainTerm(domain.trim());
+      localStorage.setItem('finalTerm', finalTerm);
+      localStorage.setItem('difficulty', OPPONENTS[selectedOpponent].id);
+      localStorage.setItem('domain', domain.trim());
+      router.push('/game');
+    } catch {
+      setStartError('Failed to start game. Please try again.');
+      setIsStarting(false);
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F1117] flex items-center justify-center">
+        <p className="text-[#A0A8C0] text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  const navItems = [
+    { label: 'Lobby', icon: '🏠', active: true },
+    { label: 'History', icon: '📋', active: false },
+    { label: 'Leaderboard', icon: '🏆', active: false },
+    { label: 'Settings', icon: '⚙️', active: false },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#fffbf7] font-sans">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-orange-100 bg-white">
-        <span className="text-xl font-bold text-stone-800">Noos Learning</span>
-        <button
-          onClick={() => router.push('/game')}
-          className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors"
-        >
-          Play Now
-        </button>
-      </nav>
+    <div className="flex min-h-screen bg-[#0F1117]">
 
-      {/* Hero */}
-      <section className="text-center px-6 pt-20 pb-10">
-        <h1 className="text-5xl font-bold text-stone-800 tracking-tight leading-tight">
-          Wordle, but smarter.
-        </h1>
-        <p className="mt-4 text-stone-500 text-lg max-w-md mx-auto">
-          Guess the 5-letter word in 6 tries. Stuck? Ask the AI chatbot for a nudge.
-        </p>
-        <div className="mt-8 flex gap-3 justify-center flex-wrap">
-          <button
-            onClick={() => router.push('/game')}
-            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors"
-          >
-            Start Playing
-          </button>
-          <button
-            onClick={scrollToHow}
-            className="px-6 py-3 border border-orange-200 text-stone-700 font-medium rounded-xl hover:bg-orange-50 transition-colors"
-          >
-            How It Works
-          </button>
+      {/* Left Sidebar */}
+      <aside className="w-64 bg-[#22263A] border-r border-[#2E3347] flex flex-col fixed inset-y-0">
+        {/* Logo */}
+        <div className="px-6 pt-6 pb-4 border-b border-[#2E3347]">
+          <span className="text-white font-bold text-xl tracking-tight">Noos</span>
         </div>
-      </section>
 
-      {/* Tile preview */}
-      <section className="flex justify-center px-6 pb-16">
-        <div className="grid gap-2">
-          {PREVIEW_ROWS.map((row, ri) => (
-            <div key={ri} className="flex gap-2">
-              {row.letters.map((letter, ci) => (
-                <div
-                  key={ci}
-                  className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center font-bold text-lg ${TILE_COLOR[row.colors[ci]]}`}
-                >
-                  {letter}
+        {/* Nav Items */}
+        <nav className="flex-1 py-4 px-3 flex flex-col gap-1">
+          {navItems.map((item) => (
+            <div
+              key={item.label}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-colors ${
+                item.active
+                  ? 'bg-[#157FEC] text-white'
+                  : 'text-[#A0A8C0] hover:bg-[#1A1D27] hover:text-white'
+              }`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        {/* Player Footer */}
+        <div className="px-4 py-4 border-t border-[#2E3347] flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#157FEC] flex items-center justify-center text-white text-sm font-bold shrink-0">
+            {playerName[0].toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-white text-sm font-medium truncate">{playerName}</p>
+            <p className="text-[#74777F] text-xs">Player</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
+
+        {/* Header Row */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Welcome back, {playerName}</h1>
+            <p className="text-[#A0A8C0] text-sm mt-1">Ready to play? Choose your domain and opponent.</p>
+          </div>
+          <div className="bg-[#157FEC] rounded-xl px-5 py-3 text-center shrink-0 ml-6">
+            <p className="text-white text-xs uppercase tracking-wide font-medium">Total Points</p>
+            <p className="text-white text-2xl font-bold">{totalPoints.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Section 1 — Choose Your Domain */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-1">Choose Your Domain</h2>
+          <p className="text-[#A0A8C0] text-sm mb-4">Enter any topic — the harder the domain, the trickier the term.</p>
+
+          <input
+            type="text"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            placeholder="e.g. Machine Learning, Ancient Rome, Jazz Music…"
+            className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-xl px-4 py-3 text-white placeholder-[#74777F] text-sm focus:outline-none focus:border-[#157FEC] transition-colors"
+          />
+
+          {/* Suggestion Chips */}
+          <div className="flex gap-2 flex-wrap mt-3">
+            {DOMAIN_SUGGESTIONS.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => setDomain(chip)}
+                className="bg-[#1A1D27] border border-[#2E3347] rounded-full px-4 py-1.5 text-[#A0A8C0] text-sm hover:border-[#157FEC] hover:text-white transition-colors"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Section 2 — Select Your Opponent */}
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-white">Select Your Opponent</h2>
+            <span className="text-[#74777F] text-sm">3 Opponents Available</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {OPPONENTS.map((opp, i) => (
+              <div
+                key={opp.id}
+                onClick={() => setSelectedOpponent(i)}
+                className="bg-[#1A1D27] border-2 rounded-2xl p-5 cursor-pointer transition-all"
+                style={{ borderColor: selectedOpponent === i ? '#157FEC' : '#2E3347' }}
+              >
+                {/* Selected badge */}
+                {selectedOpponent === i && (
+                  <div className="mb-3">
+                    <span className="bg-[#157FEC] text-white text-xs font-bold rounded-full px-2.5 py-0.5">
+                      SELECTED
+                    </span>
+                  </div>
+                )}
+
+                {/* Avatar */}
+                <div className="w-16 h-16 rounded-full bg-[#22263A] border-2 border-[#2E3347] mb-3 flex items-center justify-center text-3xl">
+                  {opp.emoji}
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="px-6 py-16 bg-orange-50">
-        <h2 className="text-2xl font-bold text-stone-800 text-center mb-10">Features</h2>
-        <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm">
-              <div className="text-3xl mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-stone-800 mb-1">{f.title}</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+                {/* Difficulty badge */}
+                <div className="mb-2">
+                  <span
+                    className="text-xs font-bold rounded-full px-2.5 py-0.5"
+                    style={{ color: opp.difficultyColor, backgroundColor: opp.difficultyColor + '20' }}
+                  >
+                    {opp.difficulty}
+                  </span>
+                </div>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="px-6 py-16">
-        <h2 className="text-2xl font-bold text-stone-800 text-center mb-10">How It Works</h2>
-        <div className="max-w-xl mx-auto space-y-8">
-          {STEPS.map((s) => (
-            <div key={s.step} className="flex gap-5 items-start">
-              <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center shrink-0 text-sm">
-                {s.step}
+                <h3 className="text-white font-semibold mb-1">{opp.name}</h3>
+                <p className="text-[#A0A8C0] text-sm">{opp.description}</p>
+
+                {/* Stats */}
+                <div className="mt-3 pt-3 border-t border-[#2E3347] flex flex-col gap-1 text-xs text-[#74777F]">
+                  <span>Helpfulness: {opp.stats.helpfulness}</span>
+                  <span>Evasion: {opp.stats.evasion}</span>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-stone-800">{s.title}</h3>
-                <p className="text-stone-500 text-sm mt-1 leading-relaxed">{s.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-orange-100 px-6 py-8 text-center text-stone-400 text-sm">
-        <p className="font-semibold text-stone-600 mb-1">Noos Learning</p>
-        <p>Built by Group 6 &middot; Mentor: Desmond &middot; Leader: Nadon</p>
-      </footer>
+      {/* Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-64 right-0 bg-[#1A1D27] border-t border-[#2E3347] px-8 py-4 flex justify-between items-center">
+        <div className="text-[#A0A8C0] text-sm">
+          Current Session:{' '}
+          <span className="text-white font-medium">{domain || '—'}</span>
+          {' '}vs{' '}
+          <span className="text-white font-medium">{OPPONENTS[selectedOpponent].name}</span>
+          {' | '}
+          <span style={{ color: OPPONENTS[selectedOpponent].difficultyColor }}>
+            {OPPONENTS[selectedOpponent].difficulty}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {startError && <p className="text-[#EF4444] text-sm">{startError}</p>}
+          <button
+            onClick={handleStartGame}
+            disabled={isStarting}
+            className="bg-[#157FEC] text-white font-medium px-8 py-3 rounded-full hover:bg-[#0d6fd8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isStarting ? 'Starting…' : 'Start Game'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
