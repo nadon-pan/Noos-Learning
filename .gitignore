@@ -43,3 +43,6 @@ next-env.d.ts
 
 # misc
 .vscode
+
+# local env files
+.env.local
