@@ -20,24 +20,25 @@ export default function AuthPage() {
 
   const handleGuest = () => {
     console.log('[Auth] Continuing as guest — redirecting to /lobby');
+    localStorage.setItem('guestMode', 'true');
     router.push('/lobby');
   };
 
   return (
-    <div className="min-h-screen bg-[#fffbf7] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0F1117] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Branding */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-stone-800 tracking-tight">Noos Learning</h1>
-          <p className="mt-2 text-stone-500 text-sm">Guess the word. Get a hint. Beat the game.</p>
+          <h1 className="text-4xl font-bold text-white tracking-tight">Noos Learning</h1>
+          <p className="mt-2 text-[#A0A8C0] text-sm">Guess the word. Get a hint. Beat the game.</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm">
+        <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 shadow-sm">
           {/* Google login */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full py-3 border border-orange-200 rounded-xl text-stone-700 text-sm font-medium hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 border border-[#2E3347] rounded-xl text-[#A0A8C0] text-sm font-medium hover:bg-[#22263A] transition-colors flex items-center justify-center gap-2"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -48,12 +49,12 @@ export default function AuthPage() {
             Continue with Google
           </button>
 
-          {message && <p className="mt-3 text-xs text-red-500 text-center">{message}</p>}
+          {message && <p className="mt-3 text-xs text-[#EF4444] text-center">{message}</p>}
 
           {/* Guest */}
           <button
             onClick={handleGuest}
-            className="w-full mt-3 py-3 text-stone-400 text-sm hover:text-stone-600 transition-colors"
+            className="w-full mt-3 py-3 text-[#74777F] text-sm hover:text-[#A0A8C0] transition-colors"
           >
             Continue as Guest →
           </button>
