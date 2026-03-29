@@ -136,18 +136,14 @@ export default function LobbyPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setHistoryLoading(false); return; }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('game_sessions')
         .select('id, domain, personality, status, started_at')
         .eq('user_id', session.user.id)
         .order('started_at', { ascending: false })
         .limit(50);
 
-      if (error) {
-        setHistoryError('Failed to load history.');
-      } else {
-        setHistoryData(data ?? []);
-      }
+      setHistoryData(data ?? []);
       setHistoryLoading(false);
     }
 
@@ -247,8 +243,7 @@ export default function LobbyPage() {
 
     const { error } = await supabase
       .from('users')
-      .update({ display_name: displayName.trim() })
-      .eq('id', session.user.id);
+      .upsert({ id: session.user.id, display_name: displayName.trim() }, { onConflict: 'id' });
 
     if (error) {
       setDisplayNameError('Failed to save. Please try again.');
