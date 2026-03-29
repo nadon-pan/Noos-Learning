@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
 import { BOT_CONFIG } from '@/lib/personalities';
+import { GradientDots } from '@/components/ui/gradient-dots';
 
 const PROMPT_COST = 50;
 const GUESS_COST = 150;
@@ -330,7 +331,7 @@ export default function GamePage() {
             )}
           </AnimatePresence>
           <span className="text-[#2E3347]">|</span>
-          <span className="text-white font-bold">Noos</span>
+          <span className="text-white font-bold">Noos Learning</span>
           <span className="text-[#2E3347] text-lg">—</span>
           <span className="text-[#A0A8C0] text-sm">
             {domain ? `Domain: ${domain}` : 'Game in Progress'}
@@ -450,7 +451,8 @@ export default function GamePage() {
         </div>
 
         {/* Right Panel — Guess */}
-        <div className="w-80 flex flex-col gap-4 p-5 overflow-y-auto shrink-0">
+        <div className="relative w-80 flex flex-col gap-4 p-5 overflow-y-auto shrink-0">
+          <GradientDots duration={25} backgroundColor="#1A1D27" />
 
           {/* Score Card */}
           <div className="bg-[#157FEC] rounded-2xl p-5 text-center relative overflow-hidden shadow-[0_0_40px_rgba(21,127,236,0.3),0_0_80px_rgba(21,127,236,0.15),inset_0_1px_0_rgba(255,255,255,0.2)]">
@@ -481,7 +483,7 @@ export default function GamePage() {
           </div>
 
           {/* Guess Section */}
-          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#1A1D27]/60 border border-[#2E3347] rounded-2xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-sm">
             <p className="text-white font-semibold text-sm mb-1">Ready to guess?</p>
             <p className="text-[#CE6000] text-xs mb-4">Incorrect guesses cost {GUESS_COST} points</p>
             <p className="text-[#74777F] text-xs uppercase tracking-widest mb-2">Who Am I?</p>
@@ -511,7 +513,7 @@ export default function GamePage() {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-5 overflow-hidden"
+                className="bg-[#1A1D27]/60 border border-[#2E3347] rounded-2xl p-5 overflow-hidden backdrop-blur-sm"
               >
                 <p className="text-[#74777F] text-xs uppercase tracking-widest mb-3">Incorrect Attempts</p>
                 <div className="flex flex-col gap-2">
@@ -535,7 +537,7 @@ export default function GamePage() {
           </AnimatePresence>
 
           {/* Cost Info */}
-          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-xl p-4 text-xs text-[#74777F] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#1A1D27]/60 border border-[#2E3347] rounded-xl p-4 text-xs text-[#74777F] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-sm">
             <div className="flex justify-between mb-1.5">
               <span>Per chat message</span>
               <span className="text-[#EF4444]">-{PROMPT_COST} pts</span>

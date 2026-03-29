@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
 import { OPPONENTS } from '@/lib/personalities';
 import { Home, BookOpen, Trophy, Settings, Lock } from 'lucide-react';
+import { GradientDots } from '@/components/ui/gradient-dots';
 
 const DOMAIN_SUGGESTIONS = [
   'Historical Figures',
@@ -289,7 +290,8 @@ export default function LobbyPage() {
   // ── Loading screen ────────────────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0F1117] flex items-center justify-center">
+      <div className="relative overflow-hidden min-h-screen bg-[#0F1117] flex items-center justify-center">
+        <GradientDots duration={25} />
         <motion.div
           animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
@@ -318,7 +320,8 @@ export default function LobbyPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-[#0F1117]">
+    <div className="relative overflow-hidden flex min-h-screen bg-[#0F1117]">
+      <GradientDots duration={25} />
 
       {/* ── Left Sidebar ── */}
       <aside className="w-64 bg-[#22263A] border-r border-[#2E3347] flex flex-col fixed inset-y-0 shadow-[inset_-1px_0_0_rgba(255,255,255,0.04),4px_0_24px_rgba(0,0,0,0.4)]">
@@ -328,7 +331,10 @@ export default function LobbyPage() {
           transition={{ duration: 0.4 }}
           className="px-6 pt-6 pb-4 border-b border-[#2E3347]"
         >
-          <span className="text-white font-bold text-xl tracking-tight">Noos</span>
+          <span className="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+              <img src="/nooslogo.svg" alt="Noos logo" className="h-7 w-7" />
+              Noos Learning
+            </span>
         </motion.div>
 
         <nav className="flex-1 py-4 px-3 flex flex-col gap-1">
@@ -374,7 +380,7 @@ export default function LobbyPage() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
+      <main className="relative z-10 flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
         <AnimatePresence mode="wait">
 
           {/* ── LOBBY TAB ── */}
@@ -805,7 +811,7 @@ export default function LobbyPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-64 right-0 bg-[#1A1D27]/90 backdrop-blur-md border-t border-[#2E3347] px-8 py-4 flex justify-between items-center shadow-[0_-4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]"
+            className="fixed bottom-0 left-64 right-0 z-20 bg-[#1A1D27]/90 backdrop-blur-md border-t border-[#2E3347] px-8 py-4 flex justify-between items-center shadow-[0_-4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]"
           >
             <div className="text-[#A0A8C0] text-sm">
               Current Session:{' '}

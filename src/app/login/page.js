@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
+import { GradientDots } from '@/components/ui/gradient-dots';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -23,8 +24,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1117] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative overflow-hidden min-h-screen bg-[#0F1117] flex items-center justify-center px-4">
+      <GradientDots duration={25} />
+      <div className="relative z-10 w-full max-w-sm">
 
         {/* Branding */}
         <motion.div
@@ -33,7 +35,10 @@ export default function AuthPage() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-white tracking-tight">Noos Learning</h1>
+          <h1 className="text-4xl font-bold text-white tracking-tight flex items-center justify-center gap-3">
+              <img src="/nooslogo.svg" alt="Noos logo" className="h-10 w-10" />
+              Noos Learning
+            </h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
