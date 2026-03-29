@@ -6,15 +6,20 @@ const openai = new OpenAI({
 });
 
 export async function POST(request) {
+    const body = await request.json(); // DEBUG
+    console.log("RECEIVED BY API:", body); // DEBUG
     try {
+        const body = await request.json();
+        
+        // Use default empty values to prevent .join() or .slice() crashes
         const { 
-            message, 
-            history, 
-            keyword, 
-            blacklist, 
-            personalityName,
-            domain
-        } = await request.json();
+            message = "", 
+            history = [], 
+            keyword = "Unknown", 
+            blacklist = [], 
+            personalityName = "The Slacker",
+            domain = "General"
+        } = body;
 
         // Rate limiting stuff below:
         //
