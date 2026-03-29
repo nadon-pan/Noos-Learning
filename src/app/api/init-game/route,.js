@@ -15,7 +15,25 @@ export async function POST(request) {
             messages: [
                 {
                     role: "system",
-                    content: "You are a goofy ahh robot."
+                    content: `
+                                You are a Game Architect. Your task is to generate a secret keyword and a blacklist of forbidden words based 
+                                on a domain and a specific opponent personality.
+
+                                ### DIFFICULTY MAPPING:
+                                - If the opponent is "The Slacker": Pick a very common, easy-to-guess noun.
+                                - If the opponent is "The Professor": Pick a technical, academic, or professional term.
+                                - If the opponent is "The Riddler": Pick an abstract, conceptual, or elusive word.
+
+                                ### BLACKLIST RULES:
+                                Identify the 5 most "obvious" words associated with the keyword. If the player hears these, the game becomes too easy.
+
+                                ### OUTPUT FORMAT:
+                                Return ONLY a JSON object:
+                                {
+                                "keyword": "SECRET_WORD",
+                                "blacklist": ["word1", "word2", "word3", "word4", "word5"]
+                                }
+                            `
                 },
                 {
                     role: "user",
