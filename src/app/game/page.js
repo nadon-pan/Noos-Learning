@@ -4,48 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
-
-const BOT_CONFIG = {
-  slacker: {
-    name: 'The Slacker',
-    emoji: '😎',
-    status: 'Online · Ready to spill the beans',
-    greeting: "Hey! So I'm basically here to help — like, a lot. Just ask me anything and I'll give you some big hints. Ready to get started? 😎",
-    responses: [
-      (term) => `Ok so honestly, it's pretty closely related to "${term.split(' ')[0]}". Like, that should help a lot.`,
-      () => "I'll just say it starts with the letter you probably already guessed. Big hint: think super common knowledge.",
-      (term) => `It's literally a famous thing in ${term.includes(' ') ? term.split(' ').slice(1).join(' ') : 'this field'}. Very well known.`,
-      () => "Ok I'm basically telling you — it's the most famous example in this area. Like, everyone knows it.",
-      (term) => `Fine, fine: the answer has ${term.length} characters. You're basically there now.`,
-    ],
-  },
-  professor: {
-    name: 'The Professor',
-    emoji: '🎓',
-    status: 'Online · Awaiting your inquiry',
-    greeting: "Good day. I shall provide scholarly guidance to help you deduce the answer. Each response will illuminate the conceptual landscape methodically. Proceed with your first inquiry.",
-    responses: [
-      () => "Consider the foundational principles that define this concept. It occupies a central role in its domain.",
-      () => "Think about what bridges theory and practice in this area. The concept you seek is both descriptive and prescriptive.",
-      () => "A scholar would approach this by examining first principles. What are the essential attributes that distinguish it?",
-      () => "This concept is frequently referenced in academic literature. Its applications span both theoretical and empirical work.",
-      () => "Consider its relationship to adjacent concepts. It is neither the broadest nor the most specific in its category.",
-    ],
-  },
-  riddler: {
-    name: 'The Riddler',
-    emoji: '🎭',
-    status: 'Online · The game has begun',
-    greeting: "I am the question without an answer, the answer without a question. Seek and you may find. Ask and I may mislead. The truth hides in plain sight... or does it? Begin.",
-    responses: [
-      () => "I speak of it yet never name it. It exists where knowledge meets practice.",
-      () => "The blind see it, the sighted overlook it. It is the foundation and the apex simultaneously.",
-      () => "Seek not what it is called, but what it does. Its name is merely a shadow of its purpose.",
-      () => "Those who know it most, use it least in speech. Those who speak of it most, understand it least.",
-      () => "It was here before you asked, and will remain long after your question fades into silence.",
-    ],
-  },
-};
+import { BOT_CONFIG } from '@/lib/personalities';
 
 const PROMPT_COST = 50;
 const GUESS_COST = 150;
