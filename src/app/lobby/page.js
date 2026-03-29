@@ -4,36 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
-
-const OPPONENTS = [
-  {
-    id: 'slacker',
-    name: 'The Slacker',
-    difficulty: 'Easy',
-    difficultyColor: '#22C55E',
-    description: 'Chill and laid-back. Will basically tell you the answer if you ask nicely.',
-    emoji: '😎',
-    stats: { helpfulness: 'Very High', evasion: 'Low' },
-  },
-  {
-    id: 'professor',
-    name: 'The Professor',
-    difficulty: 'Medium',
-    difficultyColor: '#157FEC',
-    description: 'Scholarly and methodical. Gives fair clues but makes you work for them.',
-    emoji: '🎓',
-    stats: { helpfulness: 'Medium', evasion: 'Medium' },
-  },
-  {
-    id: 'riddler',
-    name: 'The Riddler',
-    difficulty: 'Hard',
-    difficultyColor: '#EF4444',
-    description: 'Cryptic and evasive. Every answer raises more questions.',
-    emoji: '🎭',
-    stats: { helpfulness: 'Low', evasion: 'Very High' },
-  },
-];
+import { OPPONENTS } from '@/lib/personalities';
 
 const DOMAIN_SUGGESTIONS = [
   'Historical Figures',
