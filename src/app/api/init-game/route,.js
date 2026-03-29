@@ -11,44 +11,44 @@ export async function POST(request) {
         const { domain, personality } = await request.json();
 
         const systemPrompt = `
-            
+            You are a Strategic Game Designer. Your task is to initialize a "Secret Keyword" and a "Blacklist" of forbidden words based on a domain and a specific opponent personality for a deduction game.
+      
+            ### STRATEGY BY PERSONALITY:
+            - "The Slacker" (Easy): Pick a very common, tangible noun within ${domain}.
+            - "The Professor" (Medium): Pick a technical term or academic concept within ${domain}.
+            - "The Riddler" (Hard): Pick an abstract or multifaceted concept within ${domain}.
+
+            ### RULES:
+            1. TARGET: The keyword MUST be a core part of the "${domain}" domain.
+            2. BLACKLIST: Identify 5-10 most "obvious" words associated with the keyword. If the player hears these, the game becomes too easy.
+            3. OUTPUT: Return ONLY a JSON object.
         `
         
-        const respone = await openai.responses.create({
+        const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-                {
-                    role: "system",
-                    content: `
-                                You are a Game Architect. Your task is to generate a secret keyword and a blacklist of forbidden words based 
-                                on a domain and a specific opponent personality.
-
-                                ### DIFFICULTY MAPPING:
-                                - If the opponent is "The Slacker": Pick a very common, easy-to-guess noun.
-                                - If the opponent is "The Professor": Pick a technical, academic, or professional term.
-                                - If the opponent is "The Riddler": Pick an abstract, conceptual, or elusive word.
-
-                                ### BLACKLIST RULES:
-                                Identify the 5 most "obvious" words associated with the keyword. If the player hears these, the game becomes too easy.
-
-                                ### OUTPUT FORMAT:
-                                Return ONLY a JSON object:
-                                {
-                                "keyword": "SECRET_WORD",
-                                "blacklist": ["word1", "word2", "word3", "word4", "word5"]
-                                }
-                            `
-                },
-                {
-                    role: "user",
-                    content: `Domain Knowledge: ${domain}. Difficulty: ${difficulty}.`
-                },
+                { role: "system", content: systemPrompt },
+                { 
+                role: "user", 
+                content: `Generate a game setup. Domain: ${domain}. Personality: ${personality}.` 
+                }
             ],
+            response_format: { type: "json_object" },
+        });
+
+        const gameData = JSON.parse(completion.choices[0].message.content);
+
+        return NextResponse.json({
+            success:true,
+            keyword: gameData.keyword,
+            blacklist: gameData.blacklist,
+            domain: domain
         })
+
     } catch (error) {
         console.error("Error initializing game:", error);
         return NextResponse.json(
-            { error: "Failed to init game." },
+            { error: "Failed to initialise game." },
             { status : 500 }
         );
     }
