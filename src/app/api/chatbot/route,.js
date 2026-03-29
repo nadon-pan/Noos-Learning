@@ -12,7 +12,8 @@ export async function POST(request) {
             history, 
             keyword, 
             blacklist, 
-            personalityName 
+            personalityName,
+            domain
         } = await request.json();
 
         // Rate limiting stuff below:
@@ -27,7 +28,9 @@ export async function POST(request) {
 
         const systemPrompt = `
             You are playing a deduction game as the character: ${personalityName}.
-            Secret Keyword: "${keyword}" | Forbidden Words: ${blacklist.join(", ")}
+            CURRENT DOMAIN: ${domain}
+            SECRET KEYWORD: "${keyword}"
+            FORBIDDEN WORDS: ${blacklist.join(", ")}
 
             ### YOUR IDENTITY:
             - The Slacker: Lazy, unmotivated, uses slang (lowkey, literally). You are bored and "spill the beans" easily. Naturally offer hints like the first letter, the word length, or very obvious synonyms. Use slang like "basically," "literally," and "lowkey."

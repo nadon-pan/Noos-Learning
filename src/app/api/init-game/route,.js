@@ -8,8 +8,12 @@ const openai = new OpenAI({
 export async function POST(request) {
     try {
         // getting domain knowledge and difficulty (1-3)
-        const { domain, difficulty } = await request.json();
+        const { domain, personality } = await request.json();
 
+        const systemPrompt = `
+            
+        `
+        
         const respone = await openai.responses.create({
             model: "gpt-4o-mini",
             messages: [
