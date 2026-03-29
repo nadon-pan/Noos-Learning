@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
 import { OPPONENTS } from '@/lib/personalities';
+import { Home, BookOpen, Trophy, Settings, Lock } from 'lucide-react';
+import { GradientDots } from '@/components/ui/gradient-dots';
 
 const DOMAIN_SUGGESTIONS = [
   'Historical Figures',
@@ -288,7 +290,8 @@ export default function LobbyPage() {
   // ── Loading screen ────────────────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0F1117] flex items-center justify-center">
+      <div className="relative overflow-hidden min-h-screen bg-[#0F1117] flex items-center justify-center">
+        <GradientDots duration={25} />
         <motion.div
           animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
@@ -302,10 +305,10 @@ export default function LobbyPage() {
 
   // ── Nav items ─────────────────────────────────────────────────────────────
   const navItems = [
-    { label: 'Lobby',       icon: '🏠',  locked: false },
-    { label: 'History',     icon: '📋',  locked: isGuest },
-    { label: 'Leaderboard', icon: '🏆',  locked: false },
-    { label: 'Settings',    icon: '⚙️',  locked: false },
+    { label: 'Lobby',       icon: <Home size={16} />,     locked: false },
+    { label: 'History',     icon: <BookOpen size={16} />, locked: isGuest },
+    { label: 'Leaderboard', icon: <Trophy size={16} />,   locked: false },
+    { label: 'Settings',    icon: <Settings size={16} />, locked: false },
   ];
 
   const rankMedal = (rank) => {
@@ -317,17 +320,21 @@ export default function LobbyPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-[#0F1117]">
+    <div className="relative overflow-hidden flex min-h-screen bg-[#0F1117]">
+      <GradientDots duration={25} />
 
       {/* ── Left Sidebar ── */}
-      <aside className="w-64 bg-[#22263A] border-r border-[#2E3347] flex flex-col fixed inset-y-0">
+      <aside className="w-64 bg-[#22263A] border-r border-[#2E3347] flex flex-col fixed inset-y-0 shadow-[inset_-1px_0_0_rgba(255,255,255,0.04),4px_0_24px_rgba(0,0,0,0.4)]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
           className="px-6 pt-6 pb-4 border-b border-[#2E3347]"
         >
-          <span className="text-white font-bold text-xl tracking-tight">Noos</span>
+          <span className="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+              <img src="/nooslogo.svg" alt="Noos logo" className="h-7 w-7" />
+              Noos Learning
+            </span>
         </motion.div>
 
         <nav className="flex-1 py-4 px-3 flex flex-col gap-1">
@@ -351,7 +358,7 @@ export default function LobbyPage() {
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
-              {item.locked && <span className="relative z-10 text-xs opacity-60">🔒</span>}
+              {item.locked && <span className="relative z-10 opacity-50"><Lock size={13} /></span>}
             </motion.div>
           ))}
         </nav>
@@ -373,7 +380,7 @@ export default function LobbyPage() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
+      <main className="relative z-10 flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
         <AnimatePresence mode="wait">
 
           {/* ── LOBBY TAB ── */}
@@ -404,7 +411,7 @@ export default function LobbyPage() {
                   onChange={(e) => setDomain(e.target.value)}
                   maxLength={100}
                   placeholder="e.g. Machine Learning, Ancient Rome, Jazz Music…"
-                  className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-xl px-4 py-3 text-white placeholder-[#74777F] text-sm focus:outline-none focus:border-[#157FEC] transition-colors"
+                  className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-xl px-4 py-3 text-white placeholder-[#74777F] text-sm focus:outline-none focus:border-[#157FEC] transition-colors shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]"
                 />
                 <div className="flex gap-2 flex-wrap mt-3">
                   {DOMAIN_SUGGESTIONS.map((chip, i) => (
@@ -429,7 +436,7 @@ export default function LobbyPage() {
                   <h2 className="text-lg font-semibold text-white">Select Your Opponent</h2>
                   <span className="text-[#74777F] text-sm">3 Opponents Available</span>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4 items-stretch">
                   {OPPONENTS.map((opp, i) => (
                     <motion.div
                       key={opp.id}
@@ -440,39 +447,44 @@ export default function LobbyPage() {
                       whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setSelectedOpponent(i)}
-                      className="bg-[#1A1D27] border-2 rounded-2xl p-5 cursor-pointer"
-                      style={{ borderColor: selectedOpponent === i ? '#157FEC' : '#2E3347' }}
+                      className="cursor-pointer"
                     >
-                      <AnimatePresence>
-                        {selectedOpponent === i && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="mb-3"
+                      <div
+                        className="bg-[#1A1D27] border-2 rounded-2xl p-5 w-full flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
+                        style={{ borderColor: selectedOpponent === i ? '#157FEC' : '#2E3347' }}
+                      >
+                        {/* Reserve fixed height for SELECTED badge so card height stays stable */}
+                        <div className="h-6 mb-3 flex items-center">
+                          <AnimatePresence>
+                            {selectedOpponent === i && (
+                              <motion.span
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="bg-[#157FEC] text-white text-xs font-bold rounded-full px-2.5 py-0.5"
+                              >
+                                SELECTED
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        <div className="w-16 h-16 rounded-full bg-[#22263A] border-2 border-[#2E3347] mb-3 flex items-center justify-center text-3xl">
+                          {opp.emoji}
+                        </div>
+                        <div className="mb-2">
+                          <span
+                            className="text-xs font-bold rounded-full px-2.5 py-0.5"
+                            style={{ color: opp.difficultyColor, backgroundColor: opp.difficultyColor + '20' }}
                           >
-                            <span className="bg-[#157FEC] text-white text-xs font-bold rounded-full px-2.5 py-0.5">
-                              SELECTED
-                            </span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <div className="w-16 h-16 rounded-full bg-[#22263A] border-2 border-[#2E3347] mb-3 flex items-center justify-center text-3xl">
-                        {opp.emoji}
-                      </div>
-                      <div className="mb-2">
-                        <span
-                          className="text-xs font-bold rounded-full px-2.5 py-0.5"
-                          style={{ color: opp.difficultyColor, backgroundColor: opp.difficultyColor + '20' }}
-                        >
-                          {opp.difficulty}
-                        </span>
-                      </div>
-                      <h3 className="text-white font-semibold mb-1">{opp.name}</h3>
-                      <p className="text-[#A0A8C0] text-sm">{opp.description}</p>
-                      <div className="mt-3 pt-3 border-t border-[#2E3347] flex flex-col gap-1 text-xs text-[#74777F]">
-                        <span>Helpfulness: {opp.stats.helpfulness}</span>
-                        <span>Evasion: {opp.stats.evasion}</span>
+                            {opp.difficulty}
+                          </span>
+                        </div>
+                        <h3 className="text-white font-semibold mb-1">{opp.name}</h3>
+                        <p className="text-[#A0A8C0] text-sm">{opp.description}</p>
+                        <div className="mt-auto pt-3 border-t border-[#2E3347] flex flex-col gap-1 text-xs text-[#74777F]">
+                          <span>Helpfulness: {opp.stats.helpfulness}</span>
+                          <span>Evasion: {opp.stats.evasion}</span>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -493,7 +505,7 @@ export default function LobbyPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center"
+                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                 >
                   <p className="text-4xl mb-4">🔒</p>
                   <h2 className="text-white font-semibold text-lg mb-2">Log in to view your history</h2>
@@ -507,7 +519,7 @@ export default function LobbyPage() {
                   </motion.button>
                 </motion.div>
               ) : historyLoading ? (
-                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden">
+                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
                   {[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}
                 </div>
               ) : historyError ? (
@@ -516,7 +528,7 @@ export default function LobbyPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center"
+                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                 >
                   <p className="text-4xl mb-4">🎮</p>
                   <h2 className="text-white font-semibold text-lg mb-2">No games played yet</h2>
@@ -530,7 +542,7 @@ export default function LobbyPage() {
                   </motion.button>
                 </motion.div>
               ) : (
-                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden">
+                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-[#2E3347]">
@@ -580,7 +592,7 @@ export default function LobbyPage() {
               </div>
 
               {leaderboardLoading ? (
-                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden">
+                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
                   {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
                 </div>
               ) : leaderboardError ? (
@@ -589,14 +601,14 @@ export default function LobbyPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center"
+                  className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                 >
                   <p className="text-4xl mb-4">🏆</p>
                   <h2 className="text-white font-semibold text-lg mb-2">No scores yet</h2>
                   <p className="text-[#A0A8C0] text-sm">Be the first to finish a game!</p>
                 </motion.div>
               ) : (
-                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden">
+                <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-[#2E3347]">
@@ -664,7 +676,7 @@ export default function LobbyPage() {
                 <>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                    className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 mb-4"
+                    className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                   >
                     <p className="text-3xl mb-3">👤</p>
                     <h2 className="text-white font-semibold text-lg mb-2">You&apos;re playing as a guest</h2>
@@ -681,7 +693,7 @@ export default function LobbyPage() {
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6"
+                    className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                   >
                     <h3 className="text-white font-semibold mb-1">Session</h3>
                     <p className="text-[#A0A8C0] text-sm mb-4">Leave guest mode and return to the login screen.</p>
@@ -701,7 +713,7 @@ export default function LobbyPage() {
                     <motion.div
                       key="profile"
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6"
+                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                     >
                       <h3 className="text-white font-semibold mb-4">Profile</h3>
                       <label className="block text-[#A0A8C0] text-sm mb-2">Display Name</label>
@@ -714,7 +726,7 @@ export default function LobbyPage() {
                           setDisplayNameSuccess(false);
                           setDisplayNameError(null);
                         }}
-                        className="w-full bg-[#0F1117] border border-[#2E3347] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#157FEC] transition-colors mb-3"
+                        className="w-full bg-[#0F1117] border border-[#2E3347] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#157FEC] transition-colors mb-3 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]"
                       />
                       <div className="flex items-center gap-3">
                         <motion.button
@@ -754,7 +766,7 @@ export default function LobbyPage() {
                     <motion.div
                       key="account"
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6"
+                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                     >
                       <h3 className="text-white font-semibold mb-4">Account</h3>
                       <div className="flex items-center gap-3">
@@ -770,7 +782,7 @@ export default function LobbyPage() {
                     <motion.div
                       key="session"
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6"
+                      className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]"
                     >
                       <h3 className="text-white font-semibold mb-1">Session</h3>
                       <p className="text-[#A0A8C0] text-sm mb-4">Sign out of your account on this device.</p>
@@ -799,7 +811,7 @@ export default function LobbyPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-64 right-0 bg-[#1A1D27] border-t border-[#2E3347] px-8 py-4 flex justify-between items-center"
+            className="fixed bottom-0 left-64 right-0 z-20 bg-[#1A1D27]/90 backdrop-blur-md border-t border-[#2E3347] px-8 py-4 flex justify-between items-center shadow-[0_-4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]"
           >
             <div className="text-[#A0A8C0] text-sm">
               Current Session:{' '}
@@ -829,7 +841,7 @@ export default function LobbyPage() {
                 whileTap={{ scale: 0.97 }}
                 onClick={handleStartGame}
                 disabled={isStarting}
-                className="bg-[#157FEC] text-white font-medium px-8 py-3 rounded-full hover:bg-[#0d6fd8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="bg-[#157FEC] text-white font-medium px-8 py-3 rounded-full hover:bg-[#0d6fd8] disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,box-shadow] shadow-[0_0_24px_rgba(21,127,236,0.4)] hover:shadow-[0_0_32px_rgba(21,127,236,0.6)]"
               >
                 {isStarting ? 'Starting…' : 'Start Game'}
               </motion.button>
