@@ -300,7 +300,7 @@ export default function GamePage() {
     <div className="flex flex-col h-screen bg-[#0F1117] overflow-hidden">
 
       {/* Top Bar */}
-      <header className="bg-[#1A1D27] border-b border-[#2E3347] px-6 py-3 flex justify-between items-center shrink-0">
+      <header className="bg-[#1A1D27] border-b border-[#2E3347] px-6 py-3 flex justify-between items-center shrink-0 shadow-[0_1px_0_rgba(255,255,255,0.04),0_4px_16px_rgba(0,0,0,0.5)]">
         <div className="flex items-center gap-4">
           <AnimatePresence mode="wait">
             {confirmExit ? (
@@ -434,14 +434,14 @@ export default function GamePage() {
                 placeholder={`Ask for a clue (costs ${PROMPT_COST} pts per message)…`}
                 maxLength={500}
                 disabled={isSending}
-                className="flex-1 bg-[#1A1D27] border border-[#2E3347] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#74777F] focus:outline-none focus:border-[#157FEC] disabled:opacity-50 transition-colors"
+                className="flex-1 bg-[#1A1D27] border border-[#2E3347] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#74777F] focus:outline-none focus:border-[#157FEC] disabled:opacity-50 transition-colors shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.93 }}
                 onClick={handleSendMessage}
                 disabled={isSending || !chatInput.trim()}
-                className="bg-[#157FEC] text-white px-4 py-2.5 rounded-xl hover:bg-[#0d6fd8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-lg leading-none"
+                className="bg-[#157FEC] text-white px-4 py-2.5 rounded-xl hover:bg-[#0d6fd8] disabled:opacity-40 disabled:cursor-not-allowed transition-[background-color,box-shadow] text-lg leading-none shadow-[0_0_16px_rgba(21,127,236,0.4)] hover:shadow-[0_0_24px_rgba(21,127,236,0.6)]"
               >
                 ↑
               </motion.button>
@@ -453,7 +453,7 @@ export default function GamePage() {
         <div className="w-80 flex flex-col gap-4 p-5 overflow-y-auto shrink-0">
 
           {/* Score Card */}
-          <div className="bg-[#157FEC] rounded-2xl p-5 text-center relative overflow-hidden">
+          <div className="bg-[#157FEC] rounded-2xl p-5 text-center relative overflow-hidden shadow-[0_0_40px_rgba(21,127,236,0.3),0_0_80px_rgba(21,127,236,0.15),inset_0_1px_0_rgba(255,255,255,0.2)]">
             <p className="text-white/70 text-xs uppercase tracking-widest mb-1">Current Score</p>
             <motion.p
               key={score}
@@ -481,7 +481,7 @@ export default function GamePage() {
           </div>
 
           {/* Guess Section */}
-          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-5">
+          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
             <p className="text-white font-semibold text-sm mb-1">Ready to guess?</p>
             <p className="text-[#CE6000] text-xs mb-4">Incorrect guesses cost {GUESS_COST} points</p>
             <p className="text-[#74777F] text-xs uppercase tracking-widest mb-2">Who Am I?</p>
@@ -492,7 +492,7 @@ export default function GamePage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSubmitGuess()}
               placeholder="Type answer here…"
               maxLength={200}
-              className="w-full bg-[#0F1117] border border-[#2E3347] rounded-xl px-3 py-2.5 text-white text-sm placeholder-[#74777F] focus:outline-none focus:border-[#157FEC] transition-colors mb-3"
+              className="w-full bg-[#0F1117] border border-[#2E3347] rounded-xl px-3 py-2.5 text-white text-sm placeholder-[#74777F] focus:outline-none focus:border-[#157FEC] transition-colors mb-3 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]"
             />
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -535,7 +535,7 @@ export default function GamePage() {
           </AnimatePresence>
 
           {/* Cost Info */}
-          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-xl p-4 text-xs text-[#74777F]">
+          <div className="bg-[#1A1D27] border border-[#2E3347] rounded-xl p-4 text-xs text-[#74777F] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
             <div className="flex justify-between mb-1.5">
               <span>Per chat message</span>
               <span className="text-[#EF4444]">-{PROMPT_COST} pts</span>

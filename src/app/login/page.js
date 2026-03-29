@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
-import { GlowCard } from '@/components/ui/spotlight-card';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -51,13 +50,13 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
         >
-          <GlowCard glowColor="blue" customSize backdropColor="#1A1D27" className="w-full p-8">
+          <div className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
             {/* Google login */}
             <motion.button
               whileHover={{ scale: 1.02, backgroundColor: '#22263A' }}
               whileTap={{ scale: 0.97 }}
               onClick={handleGoogleLogin}
-              className="w-full py-3 border border-[#2E3347] rounded-xl text-[#A0A8C0] text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 border border-[#2E3347] rounded-xl text-[#A0A8C0] text-sm font-medium transition-[background-color,color,box-shadow] flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(21,127,236,0.25)] hover:shadow-[0_0_32px_rgba(21,127,236,0.4)]"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -90,7 +89,7 @@ export default function AuthPage() {
             >
               Continue as Guest →
             </motion.button>
-          </GlowCard>
+          </div>
         </motion.div>
       </div>
     </div>
