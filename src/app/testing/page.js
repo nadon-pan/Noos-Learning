@@ -50,7 +50,6 @@ export default function TestGamePage() {
 
   // --- 2. Call API: Chatbot ---
   const handleSendMessage = async () => {
-    console.log("SENDING TO API:", { keyword: gameData.keyword, blacklist: gameData.blacklist });
     if (!userInput) return;
 
     const newHistory = [...chatHistory, { role: 'user', content: userInput }];
@@ -58,6 +57,7 @@ export default function TestGamePage() {
     setUserInput('');
 
     try {
+        console.log("SENDING TO API:", { message: userInput, history: chatHistory, keyword: gameData.keyword, blacklist: gameData.blacklist, personalityName: personality, domain: domain });
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

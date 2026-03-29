@@ -28,7 +28,7 @@ console.log("--- INIT API HIT ---");
             3. OUTPUT: Return ONLY a JSON object.
 
             ### OUTPUT RULES:
-            Return ONLY a JSON object in the following format:
+                Return ONLY a JSON object in the following format, strictly following the keys and structure. DO NOT include any explanatory text or formatting outside of the JSON:
                 {
                 "keyword": "string",
                 "blacklist": ["string", "string", "string", "string", "string"],
@@ -57,7 +57,8 @@ console.log("--- INIT API HIT ---");
             success: true,
             domain: domain,
             keyword: gameData.keyword, 
-            blacklist: gameData.blacklist 
+            blacklist: gameData.blacklist,
+            personality: personality,
         });
 
     } catch (error) {
