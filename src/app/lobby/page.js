@@ -94,6 +94,8 @@ export default function LobbyPage() {
       }
 
       if (session) {
+        localStorage.removeItem('guestMode');
+        setIsGuest(false);
         const user = session.user;
         const name = user.user_metadata?.full_name || user.user_metadata?.name || 'Player';
         setPlayerName(name);
