@@ -132,17 +132,33 @@ export default function LobbyPage() {
         localStorage.removeItem('guestMode');
         setIsGuest(false);
         const user = session.user;
-        const name = user.user_metadata?.full_name || user.user_metadata?.name || 'Player';
-        setPlayerName(name);
+        const googleName = user.user_metadata?.full_name || user.user_metadata?.name || 'Player';
         setCurrentUserId(user.id);
         setIsAuthenticated(true);
-        setDisplayName(name);
 
-        await supabase.from('users').upsert({
-          id: user.id,
-          email: user.email,
-          name: name,
-        }, { onConflict: 'id' });
+        // Check if user already has a saved name in DB
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+
+        if (existingUser) {
+          // Use saved name, only update email
+          const savedName = existingUser.name || googleName;
+          setPlayerName(savedName);
+          setDisplayName(savedName);
+          await supabase.from('users').update({ email: user.email }).eq('id', user.id);
+        } else {
+          // First sign-in: insert with Google name
+          setPlayerName(googleName);
+          setDisplayName(googleName);
+          await supabase.from('users').insert({
+            id: user.id,
+            email: user.email,
+            name: googleName,
+          });
+        }
 
         const { data } = await supabase
           .from('scores')
@@ -172,9 +188,9 @@ export default function LobbyPage() {
 
       const { data } = await supabase
         .from('game_sessions')
-        .select('id, domain, personality, status, started_at')
+        .select('id, word, status, created_at')
         .eq('user_id', session.user.id)
-        .order('started_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(50);
 
       setHistoryData(data ?? []);
@@ -547,8 +563,7 @@ export default function LobbyPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-[#2E3347]">
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Domain</th>
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Opponent</th>
+                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Word</th>
                         <th className="text-left px-5 py-3 text-[#74777F] font-medium">Result</th>
                         <th className="text-left px-5 py-3 text-[#74777F] font-medium">Date</th>
                       </tr>
@@ -563,8 +578,7 @@ export default function LobbyPage() {
                           animate="animate"
                           className={`border-b border-[#2E3347] last:border-0 ${i % 2 === 0 ? '' : 'bg-[#22263A]/40'}`}
                         >
-                          <td className="px-5 py-3 text-white font-medium">{row.domain || '—'}</td>
-                          <td className="px-5 py-3 text-[#A0A8C0] capitalize">{row.personality || '—'}</td>
+                          <td className="px-5 py-3 text-white font-medium">{row.word || '—'}</td>
                           <td className="px-5 py-3">
                             {row.status === 'won' ? (
                               <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#22C55E]/15 text-[#22C55E]">Won</span>
@@ -575,7 +589,7 @@ export default function LobbyPage() {
                             )}
                           </td>
                           <td className="px-5 py-3 text-[#74777F]">
-                            {row.started_at ? new Date(row.started_at).toLocaleDateString() : '—'}
+                            {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
                           </td>
                         </motion.tr>
                       ))}

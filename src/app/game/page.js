@@ -164,6 +164,7 @@ export default function GamePage() {
       setGameState('won');
       setGuessInput('');
       await saveScore(score);
+      await saveGameSession('won');
     } else {
       setScore((prev) => Math.max(0, prev - GUESS_COST));
       flashScoreChange(-GUESS_COST);
@@ -186,6 +187,22 @@ export default function GamePage() {
       });
     } catch {
       // non-critical — don't block the win screen
+    }
+  }
+
+  async function saveGameSession(status) {
+    const isGuest = localStorage.getItem('guestMode') === 'true';
+    if (isGuest) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      await supabase.from('game_sessions').insert({
+        user_id: session.user.id,
+        word: localStorage.getItem('finalTerm') || '',
+        status,
+      });
+    } catch {
+      // non-critical
     }
   }
 
