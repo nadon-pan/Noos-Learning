@@ -132,17 +132,33 @@ export default function LobbyPage() {
         localStorage.removeItem('guestMode');
         setIsGuest(false);
         const user = session.user;
-        const name = user.user_metadata?.full_name || user.user_metadata?.name || 'Player';
-        setPlayerName(name);
+        const googleName = user.user_metadata?.full_name || user.user_metadata?.name || 'Player';
         setCurrentUserId(user.id);
         setIsAuthenticated(true);
-        setDisplayName(name);
 
-        await supabase.from('users').upsert({
-          id: user.id,
-          email: user.email,
-          name: name,
-        }, { onConflict: 'id' });
+        // Check if user already has a saved name in DB
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+
+        if (existingUser) {
+          // Use saved name, only update email
+          const savedName = existingUser.name || googleName;
+          setPlayerName(savedName);
+          setDisplayName(savedName);
+          await supabase.from('users').update({ email: user.email }).eq('id', user.id);
+        } else {
+          // First sign-in: insert with Google name
+          setPlayerName(googleName);
+          setDisplayName(googleName);
+          await supabase.from('users').insert({
+            id: user.id,
+            email: user.email,
+            name: googleName,
+          });
+        }
 
         const { data } = await supabase
           .from('scores')
