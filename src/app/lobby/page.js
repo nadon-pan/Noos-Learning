@@ -141,7 +141,7 @@ export default function LobbyPage() {
         await supabase.from('users').upsert({
           id: user.id,
           email: user.email,
-          display_name: name,
+          name: name,
         }, { onConflict: 'id' });
 
         const { data } = await supabase
@@ -224,12 +224,12 @@ export default function LobbyPage() {
       const userIds = sorted.map(r => r.user_id);
       const { data: userData } = await supabase
         .from('users')
-        .select('id, display_name')
+        .select('id, name')
         .in('id', userIds);
 
       const nameMap = {};
       for (const u of userData ?? []) {
-        nameMap[u.id] = u.display_name;
+        nameMap[u.id] = u.name;
       }
 
       setLeaderboardData(sorted.map((r, i) => ({
@@ -278,7 +278,7 @@ export default function LobbyPage() {
     const safeName = sanitize(displayName, 50);
     const { error } = await supabase
       .from('users')
-      .upsert({ id: session.user.id, display_name: safeName }, { onConflict: 'id' });
+      .upsert({ id: session.user.id, name: safeName }, { onConflict: 'id' });
 
     if (error) {
       setDisplayNameError('Failed to save. Please try again.');
