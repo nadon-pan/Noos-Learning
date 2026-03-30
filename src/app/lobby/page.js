@@ -358,26 +358,39 @@ export default function LobbyPage() {
     return rank;
   };
 
+  const activeOpponent = OPPONENTS[selectedOpponent];
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="relative overflow-hidden flex min-h-screen bg-[#0F1117]">
+    <div className="relative overflow-hidden min-h-screen bg-[#0F1117] xl:flex">
       <GradientDots duration={25} />
 
       {/* ── Left Sidebar ── */}
-      <aside className="w-64 bg-[#22263A] border-r border-[#2E3347] flex flex-col fixed inset-y-0 shadow-[inset_-1px_0_0_rgba(255,255,255,0.04),4px_0_24px_rgba(0,0,0,0.4)]">
+      <aside className="relative z-10 w-full border-b border-[#2E3347] bg-[#22263A]/95 shadow-[inset_0_-1px_0_rgba(255,255,255,0.04),0_4px_24px_rgba(0,0,0,0.35)] backdrop-blur xl:fixed xl:inset-y-0 xl:left-0 xl:w-64 xl:border-b-0 xl:border-r xl:bg-[#22263A] xl:shadow-[inset_-1px_0_0_rgba(255,255,255,0.04),4px_0_24px_rgba(0,0,0,0.4)]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="px-6 pt-6 pb-4 border-b border-[#2E3347]"
+          className="border-b border-[#2E3347] px-4 py-4 sm:px-6 sm:py-5"
         >
-          <span className="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+          <div className="flex items-center justify-between gap-4 xl:block">
+            <span className="text-white font-bold text-lg sm:text-xl tracking-tight flex items-center gap-2">
               <img src="/nooslogo.svg" alt="Noos logo" className="h-7 w-7" />
               Noos Learning
             </span>
+            <div className="flex items-center gap-3 xl:hidden">
+              <div className="w-9 h-9 rounded-full bg-[#157FEC] flex items-center justify-center text-white text-sm font-bold shrink-0">
+                {playerName[0].toUpperCase()}
+              </div>
+              <div className="min-w-0 text-right">
+                <p className="text-white text-sm font-medium truncate">{playerName}</p>
+                <p className="text-[#74777F] text-xs">{isGuest ? 'Guest' : 'Player'}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        <nav className="flex-1 py-4 px-3 flex flex-col gap-1">
+        <nav className="flex gap-2 overflow-x-auto px-3 py-3 xl:flex-1 xl:flex-col xl:gap-1 xl:px-3 xl:py-4">
           {navItems.map((item, i) => (
             <motion.div
               key={item.label}
@@ -385,7 +398,7 @@ export default function LobbyPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06, duration: 0.25 }}
               onClick={() => setActiveTab(item.label)}
-              className="relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer"
+              className="relative flex min-w-fit items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium cursor-pointer xl:min-w-0"
             >
               {activeTab === item.label && (
                 <motion.div
@@ -394,7 +407,7 @@ export default function LobbyPage() {
                   transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                 />
               )}
-              <div className={`relative flex items-center gap-3 z-10 ${activeTab === item.label ? 'text-white' : 'text-[#A0A8C0]'}`}>
+              <div className={`relative z-10 flex items-center gap-3 whitespace-nowrap ${activeTab === item.label ? 'text-white' : 'text-[#A0A8C0]'}`}>
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
@@ -407,7 +420,7 @@ export default function LobbyPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.3 }}
-          className="px-4 py-4 border-t border-[#2E3347] flex items-center gap-3"
+          className="hidden border-t border-[#2E3347] px-4 py-4 xl:flex xl:items-center xl:gap-3"
         >
           <div className="w-9 h-9 rounded-full bg-[#157FEC] flex items-center justify-center text-white text-sm font-bold shrink-0">
             {playerName[0].toUpperCase()}
@@ -420,22 +433,22 @@ export default function LobbyPage() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="relative z-10 flex-1 ml-64 overflow-y-auto px-8 py-8 pb-24">
+      <main className={`relative z-10 flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:ml-64 ${activeTab === 'Lobby' ? 'pb-44 sm:pb-36' : 'pb-10 sm:pb-12'}`}>
         <AnimatePresence mode="wait">
 
           {/* ── LOBBY TAB ── */}
           {activeTab === 'Lobby' && (
             <motion.div key="lobby" variants={tabVariants} initial="initial" animate="animate" exit="exit">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h1 className="text-2xl font-bold text-white">Welcome back, {playerName}</h1>
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="max-w-2xl">
+                  <h1 className="text-2xl font-bold text-white sm:text-3xl">Welcome back, {playerName}</h1>
                   <p className="text-[#A0A8C0] text-sm mt-1">Ready to play? Choose your domain and opponent.</p>
                 </div>
                 <motion.div
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15, type: 'spring', stiffness: 300 }}
-                  className="bg-[#157FEC] rounded-xl px-5 py-3 text-center shrink-0 ml-6"
+                  className="bg-[#157FEC] rounded-xl px-5 py-3 text-center shrink-0 self-start sm:min-w-[11rem]"
                 >
                   <p className="text-white text-xs uppercase tracking-wide font-medium">Total Points</p>
                   <p className="text-white text-2xl font-bold">{totalPoints.toLocaleString()}</p>
@@ -472,11 +485,11 @@ export default function LobbyPage() {
               </section>
 
               <section>
-                <div className="flex justify-between items-center mb-4">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-lg font-semibold text-white">Select Your Opponent</h2>
                   <span className="text-[#74777F] text-sm">3 Opponents Available</span>
                 </div>
-                <div className="grid grid-cols-3 gap-4 items-stretch">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 items-stretch">
                   {OPPONENTS.map((opp, i) => (
                     <motion.div
                       key={opp.id}
@@ -520,7 +533,7 @@ export default function LobbyPage() {
                           </span>
                         </div>
                         <h3 className="text-white font-semibold mb-1">{opp.name}</h3>
-                        <p className="text-[#A0A8C0] text-sm">{opp.description}</p>
+                        <p className="text-[#A0A8C0] text-sm leading-relaxed">{opp.description}</p>
                         <div className="mt-auto pt-3 border-t border-[#2E3347] flex flex-col gap-1 text-xs text-[#74777F]">
                           <span>Helpfulness: {opp.stats.helpfulness}</span>
                           <span>Evasion: {opp.stats.evasion}</span>
@@ -583,27 +596,22 @@ export default function LobbyPage() {
                 </motion.div>
               ) : (
                 <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[#2E3347]">
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Word</th>
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Result</th>
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Score</th>
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {historyData.map((row, i) => (
-                        <motion.tr
-                          key={row.id}
-                          custom={i}
-                          variants={rowVariants}
-                          initial="initial"
-                          animate="animate"
-                          className={`border-b border-[#2E3347] last:border-0 ${i % 2 === 0 ? '' : 'bg-[#22263A]/40'}`}
-                        >
-                          <td className="px-5 py-3 text-white font-medium">{row.word || '—'}</td>
-                          <td className="px-5 py-3">
+                  <div className="md:hidden divide-y divide-[#2E3347]">
+                    {historyData.map((row, i) => (
+                      <motion.div
+                        key={row.id}
+                        custom={i}
+                        variants={rowVariants}
+                        initial="initial"
+                        animate="animate"
+                        className="p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[#74777F] text-xs uppercase tracking-widest mb-1">Word</p>
+                            <p className="text-white font-medium break-words">{row.word || '—'}</p>
+                          </div>
+                          <div className="shrink-0">
                             {row.status === 'won' ? (
                               <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#22C55E]/15 text-[#22C55E]">Won</span>
                             ) : row.status === 'lost' ? (
@@ -611,17 +619,62 @@ export default function LobbyPage() {
                             ) : (
                               <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#74777F]/20 text-[#74777F]">In Progress</span>
                             )}
-                          </td>
-                          <td className="px-5 py-3 text-[#157FEC] font-semibold">
-                            {row.score != null ? `${row.score} pts` : '—'}
-                          </td>
-                          <td className="px-5 py-3 text-[#74777F]">
-                            {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-[#74777F] text-xs uppercase tracking-widest mb-1">Score</p>
+                            <p className="text-[#157FEC] font-semibold">{row.score != null ? `${row.score} pts` : '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[#74777F] text-xs uppercase tracking-widest mb-1">Date</p>
+                            <p className="text-[#A0A8C0]">{row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#2E3347]">
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium">Word</th>
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium">Result</th>
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium">Score</th>
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyData.map((row, i) => (
+                          <motion.tr
+                            key={row.id}
+                            custom={i}
+                            variants={rowVariants}
+                            initial="initial"
+                            animate="animate"
+                            className={`border-b border-[#2E3347] last:border-0 ${i % 2 === 0 ? '' : 'bg-[#22263A]/40'}`}
+                          >
+                            <td className="px-5 py-3 text-white font-medium">{row.word || '—'}</td>
+                            <td className="px-5 py-3">
+                              {row.status === 'won' ? (
+                                <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#22C55E]/15 text-[#22C55E]">Won</span>
+                              ) : row.status === 'lost' ? (
+                                <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#EF4444]/15 text-[#EF4444]">Lost</span>
+                              ) : (
+                                <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#74777F]/20 text-[#74777F]">In Progress</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-[#157FEC] font-semibold">
+                              {row.score != null ? `${row.score} pts` : '—'}
+                            </td>
+                            <td className="px-5 py-3 text-[#74777F]">
+                              {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -653,56 +706,96 @@ export default function LobbyPage() {
                 </motion.div>
               ) : (
                 <div className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[#2E3347]">
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium w-16">Rank</th>
-                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Player</th>
-                        <th className="text-right px-5 py-3 text-[#74777F] font-medium">Total Points</th>
-                        <th className="text-right px-5 py-3 text-[#74777F] font-medium">Games</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaderboardData.map((row, i) => {
-                        const isMe = row.user_id === currentUserId;
-                        return (
-                          <motion.tr
-                            key={row.user_id}
-                            custom={i}
-                            variants={rowVariants}
-                            initial="initial"
-                            animate="animate"
-                            className={`border-b border-[#2E3347] last:border-0 transition-colors ${
-                              isMe ? 'bg-[#157FEC]/10 border-l-2 border-l-[#157FEC]' : ''
-                            }`}
-                          >
-                            <td className="px-5 py-3 text-center font-bold text-lg">
-                              {typeof rankMedal(row.rank) === 'string' ? (
-                                <span>{rankMedal(row.rank)}</span>
-                              ) : (
-                                <span className="text-[#74777F] text-sm">{row.rank}</span>
-                              )}
-                            </td>
-                            <td className="px-5 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-[#22263A] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                                  {row.display_name[0].toUpperCase()}
-                                </div>
-                                <span className={`font-medium ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
+                  <div className="md:hidden divide-y divide-[#2E3347]">
+                    {leaderboardData.map((row, i) => {
+                      const isMe = row.user_id === currentUserId;
+                      return (
+                        <motion.div
+                          key={row.user_id}
+                          custom={i}
+                          variants={rowVariants}
+                          initial="initial"
+                          animate="animate"
+                          className={`p-4 ${isMe ? 'bg-[#157FEC]/10' : ''}`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-[#22263A] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                {row.display_name[0].toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className={`font-medium truncate ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
                                   {row.display_name}
                                   {isMe && <span className="ml-2 text-xs text-[#157FEC] font-normal">(you)</span>}
-                                </span>
+                                </p>
+                                <p className="text-[#74777F] text-xs">Games played: {row.games}</p>
                               </div>
-                            </td>
-                            <td className={`px-5 py-3 text-right font-semibold ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
-                              {row.total.toLocaleString()}
-                            </td>
-                            <td className="px-5 py-3 text-right text-[#74777F]">{row.games}</td>
-                          </motion.tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-lg font-bold text-white">
+                                {typeof rankMedal(row.rank) === 'string' ? rankMedal(row.rank) : `#${row.rank}`}
+                              </p>
+                              <p className={`text-sm font-semibold ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
+                                {row.total.toLocaleString()} pts
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#2E3347]">
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium w-16">Rank</th>
+                          <th className="text-left px-5 py-3 text-[#74777F] font-medium">Player</th>
+                          <th className="text-right px-5 py-3 text-[#74777F] font-medium">Total Points</th>
+                          <th className="text-right px-5 py-3 text-[#74777F] font-medium">Games</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaderboardData.map((row, i) => {
+                          const isMe = row.user_id === currentUserId;
+                          return (
+                            <motion.tr
+                              key={row.user_id}
+                              custom={i}
+                              variants={rowVariants}
+                              initial="initial"
+                              animate="animate"
+                              className={`border-b border-[#2E3347] last:border-0 transition-colors ${
+                                isMe ? 'bg-[#157FEC]/10 border-l-2 border-l-[#157FEC]' : ''
+                              }`}
+                            >
+                              <td className="px-5 py-3 text-center font-bold text-lg">
+                                {typeof rankMedal(row.rank) === 'string' ? (
+                                  <span>{rankMedal(row.rank)}</span>
+                                ) : (
+                                  <span className="text-[#74777F] text-sm">{row.rank}</span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-[#22263A] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                    {row.display_name[0].toUpperCase()}
+                                  </div>
+                                  <span className={`font-medium ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
+                                    {row.display_name}
+                                    {isMe && <span className="ml-2 text-xs text-[#157FEC] font-normal">(you)</span>}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className={`px-5 py-3 text-right font-semibold ${isMe ? 'text-white' : 'text-[#A0A8C0]'}`}>
+                                {row.total.toLocaleString()}
+                              </td>
+                              <td className="px-5 py-3 text-right text-[#74777F]">{row.games}</td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -751,7 +844,7 @@ export default function LobbyPage() {
                   </motion.div>
                 </>
               ) : (
-                <div className="flex flex-col gap-5 max-w-lg">
+                <div className="flex w-full max-w-lg flex-col gap-5">
                   {[
                     // Profile card
                     <motion.div
@@ -855,40 +948,42 @@ export default function LobbyPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-64 right-0 z-20 bg-[#1A1D27]/90 backdrop-blur-md border-t border-[#2E3347] px-8 py-4 flex justify-between items-center shadow-[0_-4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]"
+            className="fixed inset-x-0 bottom-0 z-20 border-t border-[#2E3347] bg-[#1A1D27]/90 px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:px-6 lg:px-8 xl:left-64"
           >
-            <div className="text-[#A0A8C0] text-sm">
-              Current Session:{' '}
-              <span className="text-white font-medium">{domain || '—'}</span>
-              {' '}vs{' '}
-              <span className="text-white font-medium">{OPPONENTS[selectedOpponent].name}</span>
-              {' | '}
-              <span style={{ color: OPPONENTS[selectedOpponent].difficultyColor }}>
-                {OPPONENTS[selectedOpponent].difficulty}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <AnimatePresence>
-                {startError && (
-                  <motion.p
-                    initial={{ opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="text-[#EF4444] text-sm"
-                  >
-                    {startError}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleStartGame}
-                disabled={isStarting}
-                className="bg-[#157FEC] text-white font-medium px-8 py-3 rounded-full hover:bg-[#0d6fd8] disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,box-shadow] shadow-[0_0_24px_rgba(21,127,236,0.4)] hover:shadow-[0_0_32px_rgba(21,127,236,0.6)]"
-              >
-                {isStarting ? 'Starting…' : 'Start Game'}
-              </motion.button>
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-[#A0A8C0] text-sm leading-relaxed">
+                Current Session:{' '}
+                <span className="text-white font-medium">{domain || '—'}</span>
+                {' '}vs{' '}
+                <span className="text-white font-medium">{activeOpponent.name}</span>
+                {' | '}
+                <span style={{ color: activeOpponent.difficultyColor }}>
+                  {activeOpponent.difficulty}
+                </span>
+              </div>
+              <div className="flex flex-col items-stretch gap-3 sm:items-end">
+                <AnimatePresence>
+                  {startError && (
+                    <motion.p
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[#EF4444] text-sm sm:text-right"
+                    >
+                      {startError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleStartGame}
+                  disabled={isStarting}
+                  className="w-full rounded-full bg-[#157FEC] px-8 py-3 text-white font-medium transition-[background-color,box-shadow] shadow-[0_0_24px_rgba(21,127,236,0.4)] hover:bg-[#0d6fd8] hover:shadow-[0_0_32px_rgba(21,127,236,0.6)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  {isStarting ? 'Starting…' : 'Start Game'}
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         )}

@@ -24,7 +24,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-[#0F1117] flex items-center justify-center px-4">
+    <div className="relative overflow-hidden min-h-screen bg-[#0F1117] flex items-center justify-center px-4 py-8 sm:py-12">
       <GradientDots duration={25} />
       <div className="relative z-10 w-full max-w-sm">
 
@@ -33,17 +33,17 @@ export default function AuthPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
-          <h1 className="text-4xl font-bold text-white tracking-tight flex items-center justify-center gap-3">
-              <img src="/nooslogo.svg" alt="Noos logo" className="h-10 w-10" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight flex items-center justify-center gap-2 sm:gap-3">
+              <img src="/nooslogo.svg" alt="Noos logo" className="h-9 w-9 sm:h-10 sm:w-10" />
               Noos Learning
             </h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="mt-2 text-[#A0A8C0] text-sm"
+            className="mt-2 text-[#A0A8C0] text-sm px-4 sm:px-0"
           >
             Guess the word. Get a hint. Beat the game.
           </motion.p>
@@ -55,7 +55,7 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
         >
-          <div className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
+          <div className="w-full bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 sm:p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)]">
             {/* Google login */}
             <motion.button
               whileHover={{ scale: 1.02, backgroundColor: '#22263A' }}
