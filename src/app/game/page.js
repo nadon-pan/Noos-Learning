@@ -26,7 +26,9 @@ export default function GamePage() {
   const lastSentAt = useRef(0); // rate limit: 1 msg/sec
 
   const [finalTerm, setFinalTerm] = useState(null);
+  const [blacklist,  setBlacklist]  = useState([]);
   const [botConfig, setBotConfig] = useState(BOT_CONFIG.professor);
+  const [sessionId, setSessionId]  = useState(null);
 
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -40,31 +42,38 @@ export default function GamePage() {
   const [gameState, setGameState] = useState('playing'); // 'playing' | 'won'
   const [promptsUsed, setPromptsUsed] = useState(0);
   const [startTime] = useState(() => new Date());
-  const [responseIndex, setResponseIndex] = useState(0);
   const [domain, setDomain] = useState('');
   const [confirmExit, setConfirmExit] = useState(false);
+  const [funFact, setFunFact] = useState('');
 
   useEffect(() => {
-    const term = localStorage.getItem('finalTerm');
-    const diff = localStorage.getItem('difficulty') || 'professor';
-    const dom = localStorage.getItem('domain') || '';
+    function initFromLocalStorage() {
+      const term = localStorage.getItem('finalTerm');
+      if (!term) { router.push('/lobby'); return; }
+      const bl   = JSON.parse(localStorage.getItem('blacklist') || '[]');
+      const dom  = localStorage.getItem('domain') || '';
+      const diff = localStorage.getItem('difficulty') || 'professor';
+      const config = BOT_CONFIG[diff] ?? BOT_CONFIG.professor;
+      setFinalTerm(term);
+      setBlacklist(bl);
+      setDomain(dom);
+      setBotConfig(config);
+      setMessages([{ role: 'bot', content: sanitizeText(config.greeting), time: formatTime(new Date()) }]);
+    }
 
-    if (!term) {
-      router.push('/lobby');
+    // Both guest and authenticated paths store game data in localStorage.
+    // For authenticated users, gameSessionId is also stored to update the row on completion.
+    const id = localStorage.getItem('gameSessionId');
+    if (id) setSessionId(id);
+
+    const isGuestGame = localStorage.getItem('guestGame') === 'true';
+    if (isGuestGame || id) {
+      initFromLocalStorage();
       return;
     }
 
-    const config = BOT_CONFIG[diff] || BOT_CONFIG.professor;
-    setFinalTerm(term);
-    setDomain(dom);
-    setBotConfig(config);
-
-    setMessages([{
-      role: 'bot',
-      content: sanitizeText(config.greeting),
-      time: formatTime(new Date()),
-    }]);
-  }, []);
+    router.push('/lobby');
+  }, [router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,12 +84,28 @@ export default function GamePage() {
     setTimeout(() => setScoreChange(null), 1500);
   }
 
-  // TODO: Replace with Thad's real chatbot API call
-  async function getBotResponse(_userMessage) {
-    const responses = botConfig.responses;
-    const reply = responses[responseIndex % responses.length](finalTerm);
-    setResponseIndex((prev) => prev + 1);
-    return sanitizeText(reply); // sanitize even placeholder responses
+  async function getBotResponse(userMessage) {
+    const history = messages.map((m) => ({
+      role: m.role === 'bot' ? 'assistant' : 'user',
+      content: m.content,
+    }));
+
+    const res = await fetch('/api/chatbot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userMessage,
+        history,
+        keyword: finalTerm,
+        blacklist,
+        personalityName: botConfig.name,
+        domain,
+      }),
+    });
+
+    if (!res.ok) throw new Error('Chatbot request failed');
+    const data = await res.json();
+    return sanitizeText(data.reply);
   }
 
   async function handleSendMessage() {
@@ -124,7 +149,23 @@ export default function GamePage() {
       setGameState('won');
       setGuessInput('');
       await saveScore(score);
-      await saveGameSession('won');
+      await saveGameSession('won', score);
+      // Generate "Did You Know?" blurb non-blocking
+      fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Give one surprising, educational sentence about "${finalTerm}" in the context of ${domain}. Do not mention the word itself.`,
+          history: [],
+          keyword: finalTerm,
+          blacklist,
+          personalityName: 'The Professor',
+          domain,
+        }),
+      })
+        .then((r) => r.json())
+        .then((d) => setFunFact(sanitizeText(d.reply)))
+        .catch(() => {});
     } else {
       setScore((prev) => Math.max(0, prev - GUESS_COST));
       flashScoreChange(-GUESS_COST);
@@ -150,39 +191,48 @@ export default function GamePage() {
     }
   }
 
-  async function saveGameSession(status) {
-    const isGuest = localStorage.getItem('guestMode') === 'true';
-    if (isGuest) return;
+  async function saveGameSession(status, finalScore) {
+    if (!sessionId) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      await supabase.from('game_sessions').insert({
-        user_id: session.user.id,
-        word: localStorage.getItem('finalTerm') || '',
-        status,
-      });
+      const update = { status };
+      if (finalScore !== undefined) update.score = finalScore;
+      await supabase
+        .from('game_sessions')
+        .update(update)
+        .eq('id', sessionId);
     } catch {
       // non-critical
     }
   }
 
-  function handleExit() {
+  function clearGameStorage() {
+    localStorage.removeItem('gameSessionId');
+    localStorage.removeItem('guestGame');
     localStorage.removeItem('finalTerm');
-    localStorage.removeItem('difficulty');
+    localStorage.removeItem('blacklist');
     localStorage.removeItem('domain');
+    localStorage.removeItem('difficulty');
+  }
+
+  function handleExit() {
+    clearGameStorage();
     router.push('/lobby');
   }
 
   function handlePlayNextRound() {
-    localStorage.removeItem('finalTerm');
-    localStorage.removeItem('difficulty');
-    localStorage.removeItem('domain');
+    clearGameStorage();
     router.push('/lobby');
   }
 
-  function handleShareResults() {
-    const text = `I just played Noos Learning!\nDomain: ${domain || 'Unknown'}\nFinal Score: ${score} pts\nPrompts used: ${promptsUsed}\nWrong guesses: ${incorrectGuesses.length}`;
-    navigator.clipboard.writeText(text).catch(() => {});
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  function getShareText() {
+    return `I just played Noos Learning!\nDomain: ${domain || 'Unknown'}\nFinal Score: ${score} pts\nPrompts used: ${promptsUsed}\nWrong guesses: ${incorrectGuesses.length}\nPlay at noos.app`;
+  }
+
+  function shareViaWhatsApp() {
+    window.open(`https://wa.me/?text=${encodeURIComponent(getShareText())}`, '_blank');
+    setShowShareMenu(false);
   }
 
   // ── Round Complete Screen ──────────────────────────────────────────────────
@@ -194,16 +244,15 @@ export default function GamePage() {
         transition={{ duration: 0.4 }}
         className="fixed inset-0 bg-[#0F1117] z-50 overflow-y-auto"
       >
+        <GradientDots duration={25} className="opacity-20!" />
         {/* Nav */}
         <div className="px-8 py-4 flex justify-between items-center border-b border-[#2E3347]">
           <span className="text-white font-bold text-lg">Noos</span>
           <div className="flex gap-6 text-sm text-[#A0A8C0]">
             <button onClick={() => router.push('/lobby')} className="hover:text-white transition-colors">Home</button>
-            <button className="hover:text-white transition-colors">Leaderboard</button>
-            <button className="hover:text-white transition-colors">Profile</button>
             <button
               onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
             >
               Log Out
             </button>
@@ -227,9 +276,9 @@ export default function GamePage() {
               initial={{ opacity: 0, scale: 0.88 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 280, damping: 24 }}
-              className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-8 mb-5"
+              className="bg-[#22263A] border border-[#3A3F57] rounded-2xl p-8 mb-5"
             >
-              <p className="text-[#74777F] text-xs uppercase tracking-widest mb-3">Concept</p>
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-3">Concept</p>
               <p className="text-white text-3xl font-bold">{finalTerm}</p>
             </motion.div>
 
@@ -245,11 +294,11 @@ export default function GamePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + i * 0.1, duration: 0.35 }}
-                  className={`rounded-xl p-4 ${stat.blue ? 'bg-[#157FEC]' : 'bg-[#1A1D27] border border-[#2E3347]'}`}
+                  className={`rounded-xl p-4 ${stat.blue ? 'bg-[#157FEC]' : 'bg-[#22263A] border border-[#3A3F57]'}`}
                 >
-                  <p className={`text-xs uppercase tracking-wide mb-1 ${stat.blue ? 'text-white/70' : 'text-[#74777F]'}`}>{stat.label}</p>
+                  <p className="text-white/60 text-xs uppercase tracking-wide mb-1">{stat.label}</p>
                   <p className="text-white text-2xl font-bold">{stat.value}</p>
-                  {stat.unit && <p className={`text-xs ${stat.blue ? 'text-white/60' : 'text-[#74777F]'}`}>{stat.unit}</p>}
+                  {stat.unit && <p className="text-white/60 text-xs">{stat.unit}</p>}
                 </motion.div>
               ))}
             </div>
@@ -259,12 +308,11 @@ export default function GamePage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.35 }}
-              className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 text-left mb-8"
+              className="bg-[#22263A] border border-[#3A3F57] rounded-2xl p-6 text-left mb-8"
             >
               <p className="text-[#157FEC] text-xs font-bold uppercase tracking-widest mb-3">Did You Know?</p>
-              {/* TODO: Replace with Thad's AI-generated educational blurb about the answer */}
-              <p className="text-[#A0A8C0] text-sm leading-relaxed">
-                <span className="text-white font-medium">{finalTerm}</span> is a fascinating concept with rich applications across many fields. Understanding it deeply can unlock new ways of thinking about problems in its domain.
+              <p className="text-white text-sm leading-relaxed">
+                {funFact || <><span className="text-white font-semibold">{finalTerm}</span> is a fascinating concept with rich applications across many fields.</>}
               </p>
             </motion.div>
 
@@ -282,13 +330,33 @@ export default function GamePage() {
               >
                 Play Next Round
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                onClick={handleShareResults}
-                className="border border-[#2E3347] text-[#A0A8C0] font-medium px-8 py-3 rounded-full hover:border-[#5E78A3] hover:text-white transition-colors"
-              >
-                Share Results
-              </motion.button>
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowShareMenu((v) => !v)}
+                  className="border border-[#2E3347] text-[#A0A8C0] font-medium px-8 py-3 rounded-full hover:border-[#5E78A3] hover:text-white transition-colors"
+                >
+                  Share Results
+                </motion.button>
+                <AnimatePresence>
+                  {showShareMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-[#22263A] border border-[#3A3F57] rounded-2xl overflow-hidden shadow-xl w-48"
+                    >
+                      <button
+                        onClick={shareViaWhatsApp}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-[#2E3347] transition-colors"
+                      >
+                        WhatsApp
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </div>
         </div>
