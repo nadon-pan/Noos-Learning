@@ -15,10 +15,6 @@ const DOMAIN_SUGGESTIONS = [
   'Global Economics',
 ];
 
-// TODO: Replace with real API call → POST /api/domain-generator with body { domain }
-async function getDomainTerm(domain) {
-  return `${domain} Concept`; // placeholder until Thad's endpoint is ready
-}
 
 function sanitize(str, maxLen = 100) {
   // Strip HTML tags and limit length — DOMPurify not used here since JSX escapes by default,
@@ -161,7 +157,7 @@ export default function LobbyPage() {
 
       const { data } = await supabase
         .from('game_sessions')
-        .select('id, word, status, created_at')
+        .select('id, word, score, status, created_at')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -244,10 +240,51 @@ export default function LobbyPage() {
     setStartError(null);
     try {
       const safeDomain = sanitize(domain, 100);
-      const finalTerm = await getDomainTerm(safeDomain);
-      localStorage.setItem('finalTerm', finalTerm);
-      localStorage.setItem('difficulty', OPPONENTS[selectedOpponent].id);
+      const personality = OPPONENTS[selectedOpponent].id; // 'slacker' | 'professor' | 'riddler'
+
+      // 1. Generate keyword + blacklist via Thad's init-game API
+      const res = await fetch('/api/init-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: safeDomain, personality }),
+      });
+      if (!res.ok) throw new Error('init-game failed');
+      const { keyword, blacklist } = await res.json();
+
+      // 2a. Guest path — store game data locally (no Supabase needed)
+      if (isGuest) {
+        localStorage.setItem('guestGame', 'true');
+        localStorage.setItem('finalTerm', keyword);
+        localStorage.setItem('blacklist', JSON.stringify(blacklist));
+        localStorage.setItem('domain', safeDomain);
+        localStorage.setItem('difficulty', personality);
+        router.push('/game');
+        return;
+      }
+
+      // 2b. Authenticated path — create session row in Supabase (original schema columns only)
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: gameSession, error } = await supabase
+        .from('game_sessions')
+        .insert({
+          user_id: session.user.id,
+          word: keyword,
+          keyword: keyword,
+          blacklist: blacklist,
+          status: 'in_progress',
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      // Store session ID + game data in localStorage
+      // (keyword/blacklist stored locally; session row tracks history/leaderboard)
+      localStorage.setItem('gameSessionId', gameSession.id);
+      localStorage.setItem('finalTerm', keyword);
+      localStorage.setItem('blacklist', JSON.stringify(blacklist));
       localStorage.setItem('domain', safeDomain);
+      localStorage.setItem('difficulty', personality);
       router.push('/game');
     } catch {
       setStartError('Failed to start game. Please try again.');
@@ -281,9 +318,12 @@ export default function LobbyPage() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     localStorage.removeItem('guestMode');
+    localStorage.removeItem('gameSessionId');
+    localStorage.removeItem('guestGame');
     localStorage.removeItem('finalTerm');
-    localStorage.removeItem('difficulty');
+    localStorage.removeItem('blacklist');
     localStorage.removeItem('domain');
+    localStorage.removeItem('difficulty');
     router.push('/login');
   }
 
@@ -548,6 +588,7 @@ export default function LobbyPage() {
                       <tr className="border-b border-[#2E3347]">
                         <th className="text-left px-5 py-3 text-[#74777F] font-medium">Word</th>
                         <th className="text-left px-5 py-3 text-[#74777F] font-medium">Result</th>
+                        <th className="text-left px-5 py-3 text-[#74777F] font-medium">Score</th>
                         <th className="text-left px-5 py-3 text-[#74777F] font-medium">Date</th>
                       </tr>
                     </thead>
@@ -570,6 +611,9 @@ export default function LobbyPage() {
                             ) : (
                               <span className="text-xs font-bold rounded-full px-2.5 py-0.5 bg-[#74777F]/20 text-[#74777F]">In Progress</span>
                             )}
+                          </td>
+                          <td className="px-5 py-3 text-[#157FEC] font-semibold">
+                            {row.score != null ? `${row.score} pts` : '—'}
                           </td>
                           <td className="px-5 py-3 text-[#74777F]">
                             {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
