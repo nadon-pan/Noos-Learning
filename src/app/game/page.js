@@ -41,11 +41,14 @@ export default function GamePage() {
 
   const [gameState, setGameState] = useState('playing'); // 'playing' | 'won' | 'lost'
   const [promptsUsed, setPromptsUsed] = useState(0);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [revealOrder, setRevealOrder] = useState([]);
   const [confirmGiveUp, setConfirmGiveUp] = useState(false);
   const [startTime] = useState(() => new Date());
   const [domain, setDomain] = useState('');
   const [confirmExit, setConfirmExit] = useState(false);
   const [funFact, setFunFact] = useState('');
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     function initFromLocalStorage() {
@@ -59,6 +62,16 @@ export default function GamePage() {
       setBlacklist(bl);
       setDomain(dom);
       setBotConfig(config);
+      // Build a shuffled reveal order over the non-space letter indices
+      const letterIndices = term.split('').reduce((acc, ch, i) => {
+        if (ch !== ' ') acc.push(i);
+        return acc;
+      }, []);
+      for (let i = letterIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [letterIndices[i], letterIndices[j]] = [letterIndices[j], letterIndices[i]];
+      }
+      setRevealOrder(letterIndices);
       setMessages([{ role: 'bot', content: sanitizeText(config.greeting), time: formatTime(new Date()) }]);
     }
 
@@ -68,6 +81,7 @@ export default function GamePage() {
     if (id) setSessionId(id);
 
     const isGuestGame = localStorage.getItem('guestGame') === 'true';
+    setIsGuest(isGuestGame || localStorage.getItem('guestMode') === 'true');
     if (isGuestGame || id) {
       initFromLocalStorage();
       return;
@@ -79,6 +93,13 @@ export default function GamePage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Progressive letter reveal: 1 letter revealed per prompt used
+  useEffect(() => {
+    if (!finalTerm) return;
+    const len = finalTerm.replace(/\s/g, '').length;
+    setRevealedCount(Math.min(promptsUsed, len));
+  }, [promptsUsed, finalTerm]);
 
   // Trigger loss when score hits 0 while still playing
   useEffect(() => {
@@ -95,7 +116,11 @@ export default function GamePage() {
     setTimeout(() => setScoreChange(null), 1500);
   }
 
-  async function getBotResponse(userMessage) {
+  function isHintRequest(msg) {
+    return /hint|letter|clue|give me a|tell me a|what letter|show me|reveal/i.test(msg);
+  }
+
+  async function getBotResponse(userMessage, revealLetter = null) {
     const history = messages.map((m) => ({
       role: m.role === 'bot' ? 'assistant' : 'user',
       content: m.content,
@@ -111,6 +136,7 @@ export default function GamePage() {
         blacklist,
         personalityName: botConfig.name,
         domain,
+        revealLetter,
       }),
     });
 
@@ -139,7 +165,12 @@ export default function GamePage() {
       { role: 'user', content: userMsg, time: formatTime(new Date()) },
     ]);
 
-    const reply = await getBotResponse(userMsg);
+    const nextRevealIndex = revealOrder[promptsUsed];
+    const revealLetter = isHintRequest(userMsg) && nextRevealIndex !== undefined
+      ? finalTerm[nextRevealIndex].toUpperCase()
+      : null;
+
+    const reply = await getBotResponse(userMsg, revealLetter);
     setPromptsUsed((prev) => prev + 1);
 
     setMessages((prev) => [
@@ -268,12 +299,14 @@ export default function GamePage() {
           <span className="text-white font-bold text-lg">Noos Learning</span>
           <div className="flex flex-wrap gap-4 text-sm text-[#A0A8C0] sm:gap-6">
             <button onClick={() => router.push('/lobby')} className="hover:text-white transition-colors">Home</button>
-            <button
-              onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
-              className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
-            >
-              Log Out
-            </button>
+            {!isGuest && (
+              <button
+                onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
+                className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
+              >
+                Log Out
+              </button>
+            )}
           </div>
         </div>
 
@@ -397,12 +430,14 @@ export default function GamePage() {
           <span className="text-white font-bold text-lg">Noos Learning</span>
           <div className="flex flex-wrap gap-4 text-sm text-[#A0A8C0] sm:gap-6">
             <button onClick={() => router.push('/lobby')} className="hover:text-white transition-colors">Home</button>
-            <button
-              onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
-              className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
-            >
-              Log Out
-            </button>
+            {!isGuest && (
+              <button
+                onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
+                className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
+              >
+                Log Out
+              </button>
+            )}
           </div>
         </div>
 
@@ -696,6 +731,59 @@ export default function GamePage() {
             <div className="bg-[#1A1D27]/60 border border-[#2E3347] rounded-2xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-sm sm:col-span-2 lg:col-span-1">
               <p className="text-white font-semibold text-sm mb-1">Ready to guess?</p>
               <p className="text-[#CE6000] text-xs mb-4">Incorrect guesses cost {GUESS_COST} points</p>
+
+              {/* Word Hint */}
+              {finalTerm && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[#74777F] text-xs uppercase tracking-widest">Word Hint</p>
+                    <span className="text-[#74777F] text-xs bg-[#0F1117] px-2 py-0.5 rounded-full">
+                      {finalTerm.replace(/\s/g, '').length} letters
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(() => {
+                      return finalTerm.split('').map((char, i) => {
+                        if (char === ' ') {
+                          return <div key={i} className="w-3" />;
+                        }
+                        const revealRank = revealOrder.indexOf(i);
+                        const revealed = revealRank !== -1 && revealRank < revealedCount;
+                        return (
+                          <motion.div
+                            key={i}
+                            animate={{
+                              backgroundColor: revealed ? 'rgba(21,127,236,0.15)' : 'transparent',
+                              borderColor: revealed ? '#157FEC' : '#2E3347',
+                            }}
+                            transition={{ duration: 0.3 }}
+                            className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold"
+                          >
+                            <AnimatePresence mode="wait">
+                              {revealed ? (
+                                <motion.span
+                                  key="letter"
+                                  initial={{ opacity: 0, y: -6 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="text-white uppercase"
+                                >
+                                  {char}
+                                </motion.span>
+                              ) : (
+                                <span key="blank" className="text-[#3A3F57]">_</span>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        );
+                      });
+                    })()}
+                  </div>
+                  {revealedCount === 0 && (
+                    <p className="text-[#74777F] text-xs mt-1.5">Letters reveal as you chat more</p>
+                  )}
+                </div>
+              )}
+
               <p className="text-[#74777F] text-xs uppercase tracking-widest mb-2">Who Am I?</p>
               <div className="flex flex-col gap-3">
                 <input

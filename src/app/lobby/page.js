@@ -63,6 +63,7 @@ export default function LobbyPage() {
 
   // Lobby tab state
   const [activeTab, setActiveTab] = useState('Lobby');
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [domain, setDomain] = useState('');
   const [selectedOpponent, setSelectedOpponent] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
@@ -243,13 +244,21 @@ export default function LobbyPage() {
       const personality = OPPONENTS[selectedOpponent].id; // 'slacker' | 'professor' | 'riddler'
 
       // 1. Generate keyword + blacklist via Thad's init-game API
+      // Read previously seen keywords for this domain to avoid repeats
+      const storageKey = `usedKeywords:${safeDomain.toLowerCase()}`;
+      const usedKeywords = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
       const res = await fetch('/api/init-game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: safeDomain, personality }),
+        body: JSON.stringify({ domain: safeDomain, personality, usedKeywords }),
       });
       if (!res.ok) throw new Error('init-game failed');
       const { keyword, blacklist } = await res.json();
+
+      // Remember this keyword so it won't be picked again (cap list at 50)
+      const updatedUsed = [...new Set([...usedKeywords, keyword.toLowerCase()])].slice(-50);
+      localStorage.setItem(storageKey, JSON.stringify(updatedUsed));
 
       // 2a. Guest path — store game data locally (no Supabase needed)
       if (isGuest) {
@@ -374,10 +383,13 @@ export default function LobbyPage() {
           className="border-b border-[#2E3347] px-4 py-4 sm:px-6 sm:py-5"
         >
           <div className="flex items-center justify-between gap-4 xl:block">
-            <span className="text-white font-bold text-lg sm:text-xl tracking-tight flex items-center gap-2">
+            <button
+              onClick={() => router.push('/')}
+              className="text-white font-bold text-lg sm:text-xl tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
               <img src="/nooslogo.svg" alt="Noos logo" className="h-7 w-7" />
               Noos Learning
-            </span>
+            </button>
             <div className="flex items-center gap-3 xl:hidden">
               <div className="w-9 h-9 rounded-full bg-[#157FEC] flex items-center justify-center text-white text-sm font-bold shrink-0">
                 {playerName[0].toUpperCase()}
@@ -415,6 +427,16 @@ export default function LobbyPage() {
             </motion.div>
           ))}
         </nav>
+
+        <div className="px-3 pb-2 xl:pb-3">
+          <button
+            onClick={() => setShowHowToPlay(true)}
+            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#A0A8C0] hover:text-white hover:bg-[#2E3347] transition-colors"
+          >
+            <BookOpen size={16} />
+            How to Play
+          </button>
+        </div>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -985,6 +1007,65 @@ export default function LobbyPage() {
                 </motion.button>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── How to Play Modal ── */}
+      <AnimatePresence>
+        {showHowToPlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowHowToPlay(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#1A1D27] border border-[#2E3347] rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-white font-bold text-lg">How to Play</h2>
+                <button
+                  onClick={() => setShowHowToPlay(false)}
+                  className="text-[#74777F] hover:text-white transition-colors text-xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex flex-col gap-4">
+                {[
+                  { step: '1', title: 'Pick a domain & opponent', desc: 'Choose a topic you like and an AI personality — each one gives clues differently.' },
+                  { step: '2', title: 'Chat for clues', desc: 'Ask the bot questions to narrow down the secret concept. Every message costs points, so think smart.' },
+                  { step: '3', title: 'Guess the answer', desc: 'When you\'re ready, type your guess. Wrong guesses cost more points. First correct guess wins!' },
+                ].map(({ step, title, desc }) => (
+                  <div key={step} className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#157FEC] flex items-center justify-center text-white text-sm font-bold shrink-0 mt-0.5">
+                      {step}
+                    </div>
+                    <div>
+                      <p className="text-white font-medium text-sm">{title}</p>
+                      <p className="text-[#74777F] text-xs mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 bg-[#22263A] border border-[#3A3F57] rounded-xl p-3 text-xs text-[#A0A8C0]">
+                <span className="text-[#157FEC] font-semibold">Tip:</span> As you chat more, letters in the word hint start to reveal — use them to confirm your guess!
+              </div>
+              <button
+                onClick={() => setShowHowToPlay(false)}
+                className="mt-4 w-full bg-[#157FEC] text-white font-medium py-2.5 rounded-full hover:bg-[#0d6fd8] transition-colors text-sm"
+              >
+                Got it, let&apos;s play
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

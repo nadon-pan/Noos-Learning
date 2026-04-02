@@ -12,11 +12,15 @@ console.log("--- INIT API HIT ---");
         // console.log("Payload received:", body); // DEBUG
 
         // getting domain knowledge and difficulty (1-3)
-        const { domain, personality } = await request.json();
+        const { domain, personality, usedKeywords = [] } = await request.json();
+
+        const exclusionClause = usedKeywords.length > 0
+            ? `ALREADY USED — DO NOT PICK THESE: ${usedKeywords.join(', ')}. Pick something the player hasn't seen yet.`
+            : '';
 
         const systemPrompt = `
             You are a Strategic Game Designer. Your task is to initialize a "Secret Keyword" and a "Blacklist" of forbidden words based on a domain and a specific opponent personality for a deduction game.
-      
+
             ### STRATEGY BY PERSONALITY:
             - "The Slacker" (Easy): Pick a very common, tangible noun within ${domain}.
             - "The Professor" (Medium): Pick a technical term or academic concept within ${domain}.
@@ -24,8 +28,9 @@ console.log("--- INIT API HIT ---");
 
             ### RULES:
             1. TARGET: The keyword MUST be a core part of the "${domain}" domain.
-            2. BLACKLIST: Identify 5-10 most "obvious" words associated with the keyword. If the player hears these, the game becomes too easy.
-            3. OUTPUT: Return ONLY a JSON object.
+            2. VARIETY (CRITICAL): ${exclusionClause || 'Pick an interesting and specific concept — avoid the most obvious first choice.'}
+            3. BLACKLIST: Identify 5-10 most "obvious" words associated with the keyword. If the player hears these, the game becomes too easy.
+            4. OUTPUT: Return ONLY a JSON object.
 
             ### OUTPUT RULES:
                 Return ONLY a JSON object in the following format, strictly following the keys and structure. DO NOT include any explanatory text or formatting outside of the JSON:
@@ -33,20 +38,22 @@ console.log("--- INIT API HIT ---");
                 "keyword": "string",
                 "blacklist": ["string", "string", "string", "string", "string"],
                 }
-        `
-        
+        `;
+
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-                { 
-                    role: "system", 
-                    content: systemPrompt },
-                { 
-                    role: "user", 
-                    content: `Generate a game setup. Domain: ${domain}. Personality: ${personality}.` 
+                {
+                    role: "system",
+                    content: systemPrompt,
+                },
+                {
+                    role: "user",
+                    content: `Generate a game setup. Domain: ${domain}. Personality: ${personality}.`,
                 }
             ],
             response_format: { type: "json_object" },
+            temperature: 1.1,
         });
 
         const gameData = JSON.parse(completion.choices[0].message.content);
