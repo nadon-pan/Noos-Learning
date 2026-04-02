@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '@/lib/supabase';
@@ -9,6 +9,13 @@ import { GradientDots } from '@/components/ui/gradient-dots';
 export default function AuthPage() {
   const router = useRouter();
   const [message, setMessage] = useState('');
+
+  // If the user already has a valid session, skip login
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/lobby');
+    });
+  }, [router]);
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
