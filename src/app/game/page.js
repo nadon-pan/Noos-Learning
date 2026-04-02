@@ -39,8 +39,9 @@ export default function GamePage() {
   const [guessInput, setGuessInput] = useState('');
   const [incorrectGuesses, setIncorrectGuesses] = useState([]);
 
-  const [gameState, setGameState] = useState('playing'); // 'playing' | 'won'
+  const [gameState, setGameState] = useState('playing'); // 'playing' | 'won' | 'lost'
   const [promptsUsed, setPromptsUsed] = useState(0);
+  const [confirmGiveUp, setConfirmGiveUp] = useState(false);
   const [startTime] = useState(() => new Date());
   const [domain, setDomain] = useState('');
   const [confirmExit, setConfirmExit] = useState(false);
@@ -78,6 +79,16 @@ export default function GamePage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Trigger loss when score hits 0 while still playing
+  useEffect(() => {
+    if (score === 0 && gameState === 'playing') {
+      setGameState('lost');
+      saveScore(0, false);
+      saveGameSession('lost', 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [score, gameState]);
 
   function flashScoreChange(amount) {
     setScoreChange(amount);
@@ -174,7 +185,7 @@ export default function GamePage() {
     }
   }
 
-  async function saveScore(finalScore) {
+  async function saveScore(finalScore, won = true) {
     const isGuest = localStorage.getItem('guestMode') === 'true';
     if (isGuest) return;
     try {
@@ -183,8 +194,8 @@ export default function GamePage() {
       await supabase.from('scores').insert({
         user_id: session.user.id,
         score: finalScore,
-        guesses_used: incorrectGuesses.length + 1,
-        won: true,
+        guesses_used: incorrectGuesses.length + (won ? 1 : 0),
+        won,
       });
     } catch {
       // non-critical — don't block the win screen
@@ -222,6 +233,13 @@ export default function GamePage() {
   function handlePlayNextRound() {
     clearGameStorage();
     router.push('/lobby');
+  }
+
+  function handleGiveUp() {
+    setGameState('lost');
+    setConfirmGiveUp(false);
+    saveScore(0, false);
+    saveGameSession('lost', 0);
   }
 
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -357,6 +375,97 @@ export default function GamePage() {
                   )}
                 </AnimatePresence>
               </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ── Game Over Screen ───────────────────────────────────────────────────────
+  if (gameState === 'lost') {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="fixed inset-0 bg-[#0F1117] z-50 overflow-y-auto"
+      >
+        <GradientDots duration={25} className="opacity-20!" />
+        {/* Nav */}
+        <div className="flex flex-col gap-3 border-b border-[#2E3347] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span className="text-white font-bold text-lg">Noos Learning</span>
+          <div className="flex flex-wrap gap-4 text-sm text-[#A0A8C0] sm:gap-6">
+            <button onClick={() => router.push('/lobby')} className="hover:text-white transition-colors">Home</button>
+            <button
+              onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }}
+              className="hover:text-white transition-colors text-[#EF4444] hover:text-red-400"
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center px-4 py-10 sm:px-6 sm:py-16">
+          <div className="max-w-xl w-full text-center">
+            {/* Heading */}
+            <motion.div
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              <h1 className="text-3xl font-bold text-white mb-2 sm:text-4xl">Game Over</h1>
+              <p className="text-[#EF4444] text-base font-medium mb-8 sm:mb-10 sm:text-lg">
+                {score === 0 && incorrectGuesses.length > 0 ? "You ran out of points!" : "You gave up."}
+              </p>
+            </motion.div>
+
+            {/* Answer reveal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 280, damping: 24 }}
+              className="bg-[#22263A] border border-[#3A3F57] rounded-2xl p-6 mb-5 sm:p-8"
+            >
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-3">The Answer Was</p>
+              <p className="text-white text-2xl font-bold break-words sm:text-3xl">{finalTerm}</p>
+            </motion.div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-3">
+              {[
+                { label: 'Final Score', value: 0, unit: 'pts', color: 'bg-[#EF4444]' },
+                { label: 'Prompts Used', value: promptsUsed, unit: null, color: 'bg-[#22263A] border border-[#3A3F57]' },
+                { label: 'Wrong Guesses', value: incorrectGuesses.length, unit: null, color: 'bg-[#22263A] border border-[#3A3F57]' },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1, duration: 0.35 }}
+                  className={`rounded-xl p-4 ${stat.color}`}
+                >
+                  <p className="text-white/60 text-xs uppercase tracking-wide mb-1">{stat.label}</p>
+                  <p className="text-white text-2xl font-bold">{stat.value}</p>
+                  {stat.unit && <p className="text-white/60 text-xs">{stat.unit}</p>}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+              className="flex flex-col gap-3 justify-center sm:flex-row"
+            >
+              <motion.button
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                onClick={handlePlayNextRound}
+                className="bg-[#157FEC] text-white font-medium px-8 py-3 rounded-full hover:bg-[#0d6fd8] transition-colors w-full sm:w-auto"
+              >
+                Try Again
+              </motion.button>
             </motion.div>
           </div>
         </div>
@@ -548,6 +657,37 @@ export default function GamePage() {
                   >
                     {scoreChange}
                   </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Give Up */}
+            <div className="flex justify-center">
+              <AnimatePresence mode="wait">
+                {confirmGiveUp ? (
+                  <motion.div
+                    key="confirm-giveup"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <span className="text-[#A0A8C0]">Give up and see answer?</span>
+                    <button onClick={handleGiveUp} className="text-[#EF4444] hover:text-white font-medium transition-colors">Yes</button>
+                    <button onClick={() => setConfirmGiveUp(false)} className="text-[#74777F] hover:text-white transition-colors">No</button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="giveup-btn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    whileHover={{ color: '#EF4444' }}
+                    onClick={() => setConfirmGiveUp(true)}
+                    className="text-[#74777F] text-xs transition-colors"
+                  >
+                    Give Up
+                  </motion.button>
                 )}
               </AnimatePresence>
             </div>

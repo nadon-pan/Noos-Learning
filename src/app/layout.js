@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,17 +12,56 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://noos-learning.vercel.app";
+
 export const metadata = {
-  title: "Noos Learning",
-  description: "Guess the word. Get a hint. Beat the game.",
+  title: { default: "Noos Learning", template: "%s | Noos Learning" },
+  description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    title: "Noos Learning",
+    description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+    url: siteUrl,
+    siteName: "Noos Learning",
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "Noos Learning" }],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Noos Learning",
+    description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+    images: ["/api/og"],
+  },
+  icons: {
+    icon: "/nooslogo.svg",
+    shortcut: "/nooslogo.svg",
+  },
 };
 
 export default function RootLayout({ children }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
         {/* Ambient light blobs — cinematic depth on all pages */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
           <div style={{
