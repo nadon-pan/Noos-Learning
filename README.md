@@ -6,6 +6,14 @@
 
 🔗 **[noos-learning.vercel.app](https://noos-learning.vercel.app)**
 
+## Slidedeck
+
+📃 [Slidedeck](https://drive.google.com/file/d/1hfZfqwamjiyM-v487rPpK-z-FezBngTq/view?usp=drive_link)
+
+## Demo Video
+
+🎬 [Demo video](https://youtu.be/f3Cw5uwBkD0)
+
 ---
 
 ## What is Noos Learning?
