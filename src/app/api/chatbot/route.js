@@ -5,13 +5,16 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || '',
 });
 
+// POST /api/chatbot
+// Called each time the player sends a chat message during a game.
+// Accepts: { message, history, keyword, blacklist, personalityName, domain, revealLetter }
+// Returns: { reply }
 export async function POST(request) {
     try {
         const body = await request.json();
-        
-        console.log("RECEIVED BY API:", body); // DEBUG
 
-        // Use default empty values to prevent .join() or .slice() crashes
+        // Destructure with safe defaults to prevent .join() or .slice() crashes
+        // on malformed or incomplete payloads.
         const {
             message = "",
             history = [],
@@ -19,11 +22,12 @@ export async function POST(request) {
             blacklist = [],
             personalityName = "The Slacker",
             domain = "General",
+            // revealLetter: set by the client when the player explicitly asks for a
+            // letter hint. The client pre-computes which letter is about to flip on-screen
+            // and passes it here so the bot mentions the same letter — keeping chat and
+            // UI in sync. null for conceptual questions (not hint requests).
             revealLetter = null,
         } = body;
-
-        // Rate limiting stuff below:
-        //
 
         if (!keyword || !blacklist || !personalityName) {
             return NextResponse.json(
@@ -32,6 +36,9 @@ export async function POST(request) {
             );
         }
 
+        // Pre-compute factual values and inject them explicitly into the prompt.
+        // Without this the LLM infers first letter / word length from training data,
+        // which causes hallucinations (e.g. says "H, 6 letters" when keyword is "book").
         const firstLetter = keyword.trim()[0]?.toUpperCase() ?? '?';
         const wordLength = keyword.replace(/\s/g, '').length;
 
@@ -90,8 +97,6 @@ export async function POST(request) {
             ],
             temperature: 0.5,
         });
-
-        console.log("FULL OPENAI RESPONSE:", JSON.stringify(completion, null, 2)); // DEBUG
 
         const aiReply = completion.choices[0].message.content;
         

@@ -31,8 +31,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — keep .env.example committed, ignore everything else
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -43,6 +45,7 @@ next-env.d.ts
 
 # misc
 .vscode
+.claude
 
 # local env files
 .env.local

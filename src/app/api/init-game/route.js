@@ -5,15 +5,19 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || '',
 });
 
+// POST /api/init-game
+// Called by the lobby when a player starts a new game.
+// Accepts: { domain, personality, usedKeywords[] }
+// Returns: { keyword, blacklist, domain, personality }
 export async function POST(request) {
-console.log("--- INIT API HIT ---");
     try {
-        // const body = await request.json(); // DEBUG
-        // console.log("Payload received:", body); // DEBUG
-
-        // getting domain knowledge and difficulty (1-3)
+        // usedKeywords is sent by the client (stored in localStorage per domain)
+        // and used to prevent the same term appearing twice in the same domain.
         const { domain, personality, usedKeywords = [] } = await request.json();
 
+        // Build an exclusion string only when the player has seen keywords before.
+        // Without this, gpt-4o-mini tends to pick the most obvious concept repeatedly
+        // (e.g. "Pipeline" for CI/CD every time).
         const exclusionClause = usedKeywords.length > 0
             ? `ALREADY USED — DO NOT PICK THESE: ${usedKeywords.join(', ')}. Pick something the player hasn't seen yet.`
             : '';
@@ -40,6 +44,8 @@ console.log("--- INIT API HIT ---");
                 }
         `;
 
+        // temperature: 1.1 — above default (1.0) to increase keyword variety.
+        // response_format: json_object ensures clean parseable output without markdown wrapping.
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
@@ -58,12 +64,10 @@ console.log("--- INIT API HIT ---");
 
         const gameData = JSON.parse(completion.choices[0].message.content);
 
-        console.log("Generated Game Data:", gameData); // DEBUG
-
         return NextResponse.json({
             success: true,
             domain: domain,
-            keyword: gameData.keyword, 
+            keyword: gameData.keyword,
             blacklist: gameData.blacklist,
             personality: personality,
         });
@@ -72,7 +76,7 @@ console.log("--- INIT API HIT ---");
         console.error("Error initializing game:", error);
         return NextResponse.json(
             { error: "Failed to initialise game." },
-            { status : 500 }
+            { status: 500 }
         );
     }
-};
+}
