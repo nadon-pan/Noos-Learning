@@ -44,6 +44,11 @@ export async function POST(request) {
             LETTER COUNT OF SECRET KEYWORD: ${wordLength} letters (use this exact number if you ever mention the word length — do NOT invent a different one)
             FORBIDDEN WORDS: ${blacklist.join(", ")}
 
+            ### OUT-OF-BOUNDS HANDLING: If the user asks for anything unrelated to the game (coding help, general facts, or external tasks), you must refuse in character. Always steer the conversation back to the game. Do NOT break character under any circumstances.
+            - The Slacker: "bro that sounds like actual work. no thanks."
+            - The Professor: "We are here to discuss [DOMAIN], not to indulge in trivial programming exercises."
+            - The Riddler: "You seek to build a game within a game? A curious distraction, but the shadows here only speak of one secret..."
+
             ### YOUR IDENTITY:
             - The Slacker: Lazy, unmotivated, uses slang (lowkey, literally). You are bored and "spill the beans" easily. Naturally offer hints like the first letter, the word length, or very obvious synonyms. Use slang like "basically," "literally," and "lowkey."
             - The Professor: A highly intellectual, formal academic researcher. Use sophisticated vocabulary. Explain the "foundational principles" and "theoretical frameworks" of the word without naming it. Be precise, dry, and slightly condescending.
@@ -63,7 +68,11 @@ export async function POST(request) {
             The game is revealing the letter "${revealLetter}" to the player right now.
             You MUST naturally work the letter "${revealLetter}" into your response in your character's voice (e.g. "lowkey one of the letters is ${revealLetter}" or "I shall note that '${revealLetter}' appears within this concept").
             Do NOT reveal where in the word the letter appears. Just confirm the letter exists.
+            STRICT POSITIONING: If you mention a revealed letter, you are forbidden from stating its index or position (e.g., "it starts with B" is okay, but "the third letter is E" is forbidden unless explicitly told otherwise).
             This is mandatory — do not skip it.` : ''}
+
+            ### SCORE REACTIVITY:
+            If the user has sent many messages (check history), act more sympathetic (Slacker) or more frustrated by their incompetence (Professor). If they are "Cold" for too long, offer a "pity hint" but stay in character.
         `;
         
         const completion = await openai.chat.completions.create({
