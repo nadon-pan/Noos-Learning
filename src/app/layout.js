@@ -15,22 +15,23 @@ const geistMono = Geist_Mono({
 const siteUrl = "https://noos-learning.vercel.app";
 
 export const metadata = {
-  title: { default: "Noos Learning", template: "%s | Noos Learning" },
-  description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+  title: { default: "Noos Learning — Wordle, but smarter", template: "%s | Noos Learning" },
+  description: "Chat with an AI personality to extract clues and guess the mystery term. Pick any topic — history, science, pop culture — and outsmart the bot.",
   metadataBase: new URL(siteUrl),
+  keywords: ["word game", "AI game", "wordle", "learning game", "educational game", "trivia", "clue game", "guessing game"],
   openGraph: {
-    title: "Noos Learning",
-    description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+    title: "Noos Learning — Wordle, but smarter",
+    description: "Chat with an AI personality to extract clues and guess the mystery term. Pick any topic — history, science, pop culture — and outsmart the bot.",
     url: siteUrl,
     siteName: "Noos Learning",
-    images: [{ url: "/api/og", width: 1200, height: 630, alt: "Noos Learning" }],
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "Noos Learning — AI-powered word guessing game" }],
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Noos Learning",
-    description: "Wordle, but smarter. Chat with an AI bot to extract clues and guess the mystery term.",
+    title: "Noos Learning — Wordle, but smarter",
+    description: "Chat with an AI personality to extract clues and guess the mystery term.",
     images: ["/api/og"],
   },
   icons: {

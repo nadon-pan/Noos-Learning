@@ -82,6 +82,29 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0F1117] text-white">
 
+      {/* JSON-LD structured data for Google rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'Noos Learning',
+            url: 'https://noos-learning.vercel.app',
+            description: 'Wordle, but smarter. Chat with an AI personality to extract clues and guess the mystery term.',
+            applicationCategory: 'Game',
+            operatingSystem: 'Web',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            featureList: [
+              'AI-powered conversational hints',
+              'Multiple difficulty personalities',
+              'Any domain or topic',
+              'Guest play — no sign-up required',
+            ],
+          }),
+        }}
+      />
+
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-[#2E3347] bg-[#0F1117]/90 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
